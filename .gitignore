@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# General
+.DS_Store
+*.FCStd1
