@@ -8,17 +8,17 @@
  * @file      Config.h
  * @author    mgesteiro
  * @date      20221216
- * @version   0.1.0-beta
+ * @version   0.1.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define VERSION "0.1.0-beta"
+#define VERSION "0.1.1-beta"
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <Escornalib.h>
+#include <Escornabot-lib.h>
 
-Escornalib luci;
+Escornabot luci;
 uint32_t currentTime;
 
 #define PROGRAMMING 0
@@ -63,7 +63,7 @@ void loop() {
 	case EXECUTING:
 		// continue sequence
 		if (kp_code) stop(currentTime); // abort if any key is pressed
-		else processProgram(); //luci.handleSequence(currentTime);
+		else processProgram();
 		break;
 	}
 
@@ -78,7 +78,7 @@ void loop() {
  * Start-up light and sound sequence.
  */
 void startUpShow() {
-	// start-up sequence: beep + al button colors + purple
+	// start-up sequence: beep + all button colors + purple
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	uint8_t tshow = 150;
 	luci.showKeyColor(EB_KP_KEY_FW); // blue
@@ -100,7 +100,11 @@ void startUpShow() {
  */
 void addCommand(EB_T_COMMANDS command)
 {
-	if (program_count >= 128) return;
+	if (program_count >= 128)
+	{
+		status = EXECUTING; // GO!
+		return;
+	}
 	program[program_count] = command;
 	program_count ++;
 
@@ -136,7 +140,7 @@ void stop(uint32_t currentTime)
  * Takes care of the keypad and what to do when some key is used.
  * 
  * This function is responsible for the "PROGRAMMING" state when user input is
- * being attended and nows what to do with that input (like adding commands to
+ * being attended and knows what to do with that input (like adding commands to
  * the list, launching the execution, etc.)
  */
 void processKeyStroke(uint8_t kp_code)
@@ -218,8 +222,8 @@ void processKeyStroke(uint8_t kp_code)
  * Takes care of the program execution.
  * 
  * This function is responsible for the "EXECUTING" state when the program/list
- * of commands is being processed. It takes care of both actions execution
- * themselves and program/commands processing (reading and interpreting commands).
+ * of commands is being processed. It takes care of both, actions execution
+ * themselves, and program/commands processing (reading and interpreting commands).
  */
 void processProgram()
 {

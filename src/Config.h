@@ -1,5 +1,5 @@
 /**
- * Configuration file for the Escornalib library.
+ * Configuration file for the Escornabot-lib library.
  * 
  * A collection of parameters to configure how the Escornalib libray operates.
  * More info about the project at roboteach.es/escornabot and escornabot.org.
@@ -7,7 +7,7 @@
  * @file      Config.h
  * @author    mgesteiro
  * @date      20221216
- * @version   0.1.0-beta
+ * @version   0.1.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -40,7 +40,7 @@
 #define EB_KP_CHECK_MIN_INTERVAL 5L  // checking minimum interval, ms
 
 
-// Led
+// LED
 #define SIMPLELED_PIN 13
 
 // NeoPixel

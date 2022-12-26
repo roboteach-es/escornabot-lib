@@ -1,8 +1,8 @@
-# Syntax Coloring Map For Escornalib
+# Syntax Coloring Map For Escornabot-lib
 
 # Datatypes (KEYWORD1)
 
-Escornalib	KEYWORD1
+Escornabot	KEYWORD1
 EB_T_KP_KEYS	KEYWORD1
 EB_T_KP_EVENTS	KEYWORD1
 EB_T_COMMANDS	KEYWORD1
@@ -39,9 +39,7 @@ handleStandby	KEYWORD2
 debug	KEYWORD2
 
 
-#######################################
 # Constants (LITERAL1)
-#######################################
 
 EB_BEEP_DEFAULT	LITERAL1
 EB_BEEP_FORWARD	LITERAL1

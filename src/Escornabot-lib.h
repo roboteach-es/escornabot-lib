@@ -1,21 +1,21 @@
 /**
- * Escornalib is a library for the Escornabot ROBOT.
+ * Escornabot-lib is a library for the Escornabot ROBOT.
  * 
  * A library with all the core functions and data to program an Escornabot
  * ROBOT. More info about the project at roboteach.es/escornabot and
  * escornabot.org.
  *
- * @file      Escornalib.h
+ * @file      Escornabot-lib.h
  * @author    mgesteiro
  * @date      20221216
- * @version   0.1.0-beta
+ * @version   0.1.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#ifndef ESCORNALIB_H
-#define ESCORNALIB_H
+#ifndef ESCORNABOT_LIB_H
+#define ESCORNABOT_LIB_H
 
-#define EB_VERSION "0.1b"
+#define EB_VERSION "0.1.1-beta"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -141,11 +141,11 @@ const String EB_CMD_LABELS[] =
 /**
  * Main class with the core functions and data to program an Escornabot ROBOT.
  */
-class Escornalib {
+class Escornabot {
 public:
 	// constructor and destructor
-	Escornalib();
-	virtual ~Escornalib();
+	Escornabot();
+	virtual ~Escornabot();
 
 	// Stepper motors
 	void move(float cms);

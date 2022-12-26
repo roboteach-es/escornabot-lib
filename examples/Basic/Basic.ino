@@ -1,9 +1,9 @@
 /*
- * Escornalib basic example: move in squares!
+ * Escornabot-lib basic example: move in squares!
  */
 
-#include <Escornalib.h>
-Escornalib luci;
+#include <Escornabot-lib.h>
+Escornabot luci;
 
 
 void setup(){

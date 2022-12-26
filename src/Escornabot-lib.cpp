@@ -1,19 +1,19 @@
 /**
- * Escornalib is a library for the Escornabot ROBOT.
+ * Escornabot-lib is a library for the Escornabot ROBOT.
  * 
  * A library with all the core functions and data to program an Escornabot
  * ROBOT. More info about the project at roboteach.es/escornabot and
  * escornabot.org.
  *
- * @file      Escornalib.cpp
+ * @file      Escornabot-lib.cpp
  * @author    mgesteiro
  * @date      20221216
- * @version   0.1.0-beta
+ * @version   0.1.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #include <Arduino.h>
-#include "Escornalib.h"
+#include "Escornabot-lib.h"
 
 
 
@@ -26,7 +26,7 @@
 /**
  * Constructor
  */
-Escornalib::Escornalib() {
+Escornabot::Escornabot() {
 	// Stepper motors
 	_initCoilsPins();
 	// Buzzer
@@ -52,7 +52,7 @@ Escornalib::Escornalib() {
 /**
  * Destructor
  */
-Escornalib::~Escornalib() {
+Escornabot::~Escornabot() {
 }
 
 
@@ -71,7 +71,7 @@ Escornalib::~Escornalib() {
  * 
  * @note This method is blocking: it only returns after finishing the move.
  */
-void Escornalib::move(float cms)
+void Escornabot::move(float cms)
 {
 	// fixReversed - stepper motors with swapped cables
 	if (_isReversed) cms = -cms;
@@ -96,7 +96,7 @@ void Escornalib::move(float cms)
  *                 turns to the right, if negative, to the left.
  * @note This method is blocking: it only returns after finishing the turn.
  */
-void Escornalib::turn(float degrees)
+void Escornabot::turn(float degrees)
 {
 	// fixReversed - stepper motors with swapped cables
 	if (_isReversed) degrees = -degrees;
@@ -117,7 +117,7 @@ void Escornalib::turn(float degrees)
 /**
  * Disable the stepper motors (switching off the coils).
  */
-void Escornalib::disableSM()
+void Escornabot::disableSM()
 {
 	_setCoils(0, 0);
 }
@@ -125,7 +125,7 @@ void Escornalib::disableSM()
 /**
  * Initializes the output pins for the stepper motor coils.
  */
-void Escornalib::_initCoilsPins()
+void Escornabot::_initCoilsPins()
 {
 	// PORTB maps to Arduino digital pins 8 to 13. The two high bits (6 & 7) map to the crystal pins and are not usable.
 	DDRB = DDRB | B00001111;  // pins x,x,x,x,11,10,9,8 as OUTPUT - Right motor
@@ -145,7 +145,7 @@ void Escornalib::_initCoilsPins()
  * @param stateL  coils on/off pattern to be applied to the left stepper motor.
  *                Only the lower nibble is used (4 coils -> 4 bits), the rest is ignored.
  */
-void Escornalib::_setCoils(uint8_t stateR, uint8_t stateL)
+void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
 {
 	// PORTB maps to Arduino digital pins 8 to 13 The two high bits (6 & 7) map to the crystal pins and are not usable
 	// RightMotor - pins 11,10,9,8 -> PORTB bits[3-0] = stateR bits[3-0]
@@ -176,7 +176,7 @@ void Escornalib::_setCoils(uint8_t stateR, uint8_t stateL)
  *
  * @note this function is non-blocking and returns inmediatly.
  */
-void Escornalib::beep(EB_T_BEEPS frequency, uint16_t duration)
+void Escornabot::beep(EB_T_BEEPS frequency, uint16_t duration)
 {
 	tone(BUZZER_PIN, frequency, duration);
 }
@@ -189,7 +189,7 @@ void Escornalib::beep(EB_T_BEEPS frequency, uint16_t duration)
  *
  * @note this function is blocking (wait for the note to be finished).
  */
-void Escornalib::playNote(uint16_t frequency, uint16_t duration)
+void Escornabot::playNote(uint16_t frequency, uint16_t duration)
 {
 	beep(frequency, duration);
 	delay(duration);
@@ -208,7 +208,7 @@ void Escornalib::playNote(uint16_t frequency, uint16_t duration)
  * 
  * @param state  Should be HIGH (on) or LOW (off)
  */
-void Escornalib::turnLED(uint8_t state)
+void Escornabot::turnLED(uint8_t state)
 {
 	digitalWrite(SIMPLELED_PIN, state);
 }
@@ -218,7 +218,7 @@ void Escornalib::turnLED(uint8_t state)
  * 
  * @param times  Number of times to blink.
  */
-void Escornalib::blinkLED(uint8_t times)
+void Escornabot::blinkLED(uint8_t times)
 {
 	while (times > 0)
 	{
@@ -245,7 +245,7 @@ void Escornalib::blinkLED(uint8_t times)
  * @param G  (0-255) Ammount of green
  * @param B  (0-255) Ammount of blue
  */
-void Escornalib::showColor(uint8_t R, uint8_t G, uint8_t B)
+void Escornabot::showColor(uint8_t R, uint8_t G, uint8_t B)
 {
 	//_neopixel->clear(); // Set all pixel colors to 'off'
 	_neopixel->setPixelColor(0, _neopixel->Color(R, G, B));
@@ -257,7 +257,7 @@ void Escornalib::showColor(uint8_t R, uint8_t G, uint8_t B)
  * 
  * @param key  Which key color to be shown.
  */
-void Escornalib::showKeyColor(uint8_t key)
+void Escornabot::showKeyColor(uint8_t key)
 {
 	switch (key) {
 	case EB_KP_KEY_NN:  // NONE
@@ -286,7 +286,7 @@ void Escornalib::showKeyColor(uint8_t key)
 /**
  * Escornabot NeoPixel initialization.
  */
-void Escornalib::_initNeoPixel(int pin)
+void Escornabot::_initNeoPixel(int pin)
 {
 	// initializes our ONE pixel strip
 	_neopixel = new NeoPixel(1, pin, NEO_GRB + NEO_KHZ800);
@@ -313,7 +313,7 @@ void Escornalib::_initNeoPixel(int pin)
  * @param KeypadValue_TR  analog value for turn right key
  * @param KeypadValue_BW  analog value for forward key
  */
-void Escornalib::configKeypad(
+void Escornabot::configKeypad(
 	uint8_t KeypadPin,
 	int16_t KeypadValue_NN,
 	int16_t KeypadValue_FW,
@@ -339,7 +339,7 @@ void Escornalib::configKeypad(
  *
  * @return the current active (closed) key. It may be none [0].
  */
-EB_T_KP_KEYS Escornalib::getPressedKey()
+EB_T_KP_KEYS Escornabot::getPressedKey()
 {
 	EB_T_KP_KEYS result;
 	int16_t value, diff, minor_diff;
@@ -372,7 +372,7 @@ EB_T_KP_KEYS Escornalib::getPressedKey()
  *
  * @return  lo nibble -> key [EB_T_KP_KEYS],  hi nibble -> event [EB_T_KP_EVENTS]
  */
-uint8_t Escornalib::handleKeypad(uint32_t currentTime)
+uint8_t Escornabot::handleKeypad(uint32_t currentTime)
 {
 	uint8_t result = 0;
 	if ((currentTime - _keypad_previousTime) > EB_KP_CHECK_MIN_INTERVAL)
@@ -450,7 +450,7 @@ uint8_t Escornalib::handleKeypad(uint32_t currentTime)
  * 
  * @param currentTime  Current time in milliseconds (should be provided).
  */
-void Escornalib::clearKeypad(uint32_t currentTime)
+void Escornabot::clearKeypad(uint32_t currentTime)
 {
 	memset(_keypad_key, 0, sizeof(_keypad_key));
 	memset(_keypad_key_state, 0, sizeof(_keypad_key_state));
@@ -466,7 +466,7 @@ void Escornalib::clearKeypad(uint32_t currentTime)
  * @param label  Name of the button to check.
  * @return true if the button is active, false otherwise.
  */
-bool Escornalib::isButtonPressed(String label)
+bool Escornabot::isButtonPressed(String label)
 {
 	int8_t keyPressed = getPressedKey();
 	if (label == EB_KEYS_LABELS[keyPressed]) return true;
@@ -478,7 +478,7 @@ bool Escornalib::isButtonPressed(String label)
  * 
  * @return Analog reading output of the keypad pin.
  */
-int16_t Escornalib::rawKeypad()
+int16_t Escornabot::rawKeypad()
 {
 	return analogRead(_keypad_pin);
 }
@@ -499,7 +499,7 @@ int16_t Escornalib::rawKeypad()
  * @param value  cms or degrees (for PAUSE use cms). You should provide de final value,
  *               no logic/calculation is done in this method.
  */
-void Escornalib::prepareAction(EB_T_COMMANDS command, float value)
+void Escornabot::prepareAction(EB_T_COMMANDS command, float value)
 {
 	value = abs(value);
 	switch (command)
@@ -568,7 +568,7 @@ void Escornalib::prepareAction(EB_T_COMMANDS command, float value)
  *          EB_CMD_R_PENDING_ACTION if there is still pending movement/action
  *          EB_CMD_R_FINISHED_ACTION if just has finished the last movement/action
  */
-uint8_t Escornalib::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
+uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 {
 	if (_exec_steps == 0) return 0; // nothing to do
 
@@ -632,7 +632,7 @@ uint8_t Escornalib::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
  * @param currentTime  Current time in milliseconds (should be provided).
  *  
  */
-void Escornalib::stopAction(uint32_t currentTime)
+void Escornabot::stopAction(uint32_t currentTime)
 {
 	// shutdown execution
 	_exec_steps = 0;
@@ -652,7 +652,7 @@ void Escornalib::stopAction(uint32_t currentTime)
  * This is an "easy fix" to deal with stepper motors that have swapped
  * wires and instead of blue-pink-yellow-orange come with pink-blue-orange-yellow.
  */
-void Escornalib::fixReversed()
+void Escornabot::fixReversed()
 {
 	_isReversed = true;
 }
@@ -663,7 +663,7 @@ void Escornalib::fixReversed()
  * 
  * @param currentTime  Current time in milliseconds (should be provided).
  */
-void Escornalib::handleStandby(uint32_t currentTime)
+void Escornabot::handleStandby(uint32_t currentTime)
 {
 	// avoid powerbank shutdown
 	if (_powerbank_previousTime == 0) // first time only
@@ -704,10 +704,10 @@ void Escornalib::handleStandby(uint32_t currentTime)
 /**
  * Provides debug information about the library via serial port.
  */
-void Escornalib::debug()
+void Escornabot::debug()
 {
 	// debug info
-	Serial.print("Escornalib v");
+	Serial.print("Escornabot-lib v");
 	Serial.println(EB_VERSION);
 }
 #endif
