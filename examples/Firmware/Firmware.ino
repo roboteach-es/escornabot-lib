@@ -7,12 +7,12 @@
  *
  * @file      Config.h
  * @author    mgesteiro
- * @date      20221216
- * @version   0.1.1-beta
+ * @date      20221225
+ * @version   0.1.2-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define VERSION "0.1.1-beta"
+#define VERSION "0.1.2-beta"
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -92,7 +92,7 @@ void startUpShow() {
 	luci.showKeyColor(EB_KP_KEY_GO); // white
 	delay(tshow);
 	// finish with Luci color for a while
-	luci.showKeyColor(EB_LUCI_COLOR); // purple
+	luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
 } // startUpShow()
 
 /**
@@ -124,7 +124,7 @@ void stop(uint32_t currentTime)
 	luci.disableSM();
 	luci.clearKeypad(currentTime);
 	luci.beep(EB_BEEP_DEFAULT, 100);
-	luci.showKeyColor(EB_LUCI_COLOR); // purple
+	luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
 	program_count = 0;  // reset program
 	program_index = 0;  // and index
 	status = PROGRAMMING;  // back to user input
@@ -173,7 +173,6 @@ void processKeyStroke(uint8_t kp_code)
 			Serial.println("GO!");
 			#endif
 
-			delay(900); // small pause before starting
 			break;
 		case EB_KP_KEY_TR:
 			luci.beep(EB_BEEP_TURNRIGHT, 100);
@@ -185,10 +184,13 @@ void processKeyStroke(uint8_t kp_code)
 			luci.showKeyColor(key);
 			addCommand(EB_CMD_BW);
 			break;
+		default:
+			// this case should not be possible
+			return;
 		}
-		// remove color after a moment
+		// go back to "input color" after a moment
 		delay(150);
-		luci.showKeyColor(0);
+		luci.showKeyColor(EB_LUCI_COLOR);
 	}
 	// LONG key presses
 	else if (event == EB_KP_EVT_LONGPRESSED)
@@ -210,10 +212,12 @@ void processKeyStroke(uint8_t kp_code)
 			luci.showKeyColor(key);
 			addCommand(EB_CMD_PA);
 			break;
+		default:
+			return; // unhandled case, avoid any further action
 		}
-		// remove color after a moment
+		// go back to "input color" after a moment
 		delay(150);
-		luci.showKeyColor(0);
+		luci.showKeyColor(EB_LUCI_COLOR);
 	}
 } // processKeyStroke()
 
@@ -242,6 +246,8 @@ void processProgram()
 		if (program_index < program_count)
 		{
 			// process command
+			if (program_index == 0) delay(600); // small pause before starting
+
 			switch (program[program_index])
 			{
 			case EB_CMD_FW:
@@ -286,7 +292,7 @@ void processProgram()
 			// execution finished
 			luci.disableSM();
 			// play final melody()
-			luci.showKeyColor(EB_LUCI_COLOR); // purple
+			luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
 			program_count = 0;  // reset program
 			program_index = 0;  // and index
 			status = PROGRAMMING;  // back to user input
