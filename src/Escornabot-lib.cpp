@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro
- * @date      20221216
- * @version   0.1.1-beta
+ * @date      20221225
+ * @version   0.1.2-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -469,7 +469,7 @@ void Escornabot::clearKeypad(uint32_t currentTime)
 bool Escornabot::isButtonPressed(String label)
 {
 	int8_t keyPressed = getPressedKey();
-	if (label == EB_KEYS_LABELS[keyPressed]) return true;
+	if (label == EB_KP_KEYS_LABELS[keyPressed]) return true;
 	return false;
 }
 

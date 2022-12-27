@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro
- * @date      20221216
- * @version   0.1.1-beta
+ * @date      20221225
+ * @version   0.1.2-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "0.1.1-beta"
+#define EB_VERSION "0.1.2-beta"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -76,7 +76,7 @@ typedef enum
 	EB_KP_KEY_BW = 5
 } EB_T_KP_KEYS;
 #define EB_T_KP_KEYS_SIZE 6
-const String EB_KEYS_LABELS[] = {"NONE", "FORWARD", "TURN LEFT", "GO", "TURN RIGHT", "BACKWARD"};
+const String EB_KP_KEYS_LABELS[] = {"NONE", "FORWARD", "TURN LEFT", "GO", "TURN RIGHT", "BACKWARD"};
 
 /**
  * Definition of all the possible EVENTs handling an Escornabot keypad.

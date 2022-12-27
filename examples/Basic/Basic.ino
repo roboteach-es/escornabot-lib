@@ -1,4 +1,4 @@
-/*
+/**
  * Escornabot-lib basic example: move in squares!
  */
 
