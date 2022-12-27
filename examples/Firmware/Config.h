@@ -1,9 +1,8 @@
 /**
- * Configuration file for the Escornabot-lib library.
+ * Configuration file for the Luci's Firmware.
  * 
- * A collection of parameters to configure how the Escornabot-lib library
- * operates. More info about the project at roboteach.es/escornabot and
- * escornabot.org.
+ * A collection of parameters to configure Luci's behaviour.
+ * Based on the Escornabot-lib library config file: should be included after Escornabot-lib.h. 
  *
  * @file      Config.h
  * @author    mgesteiro
@@ -13,21 +12,18 @@
  */
 
 // Escornabot geometry
-#define WHEEL_DIAMETER 75.5f // mm Luci: 75.5 (theoretical)
-#define WHEEL_DISTANCE 80.1f // mm (ground touching point to point) Luci: 80.1 (theoretical)
+#define WHEEL_DIAMETER 75.5f // mm
+#define WHEEL_DISTANCE 80.1f // mm (ground touching point to point)
 
 // Stepper motors
-#define STEPPERMOTOR_STEPS_PER_SECOND 450.0f //475.0f // speed -> MAX=490, MIN=60
+#define STEPPERMOTOR_STEPS_PER_SECOND 450.0f // speed -> MAX=490, MIN=60
 // from https://github.com/mgesteiro/steppers#stepping, using full-stepping mode
-// theoretical value: 32 * 63,6840 = 2037,8864
-// practical value: 2048 (slips, gear teeth engagement, etc.)
 #define STEPPERMOTOR_FULLREVOLUTION_STEPS 2048.0f // number of steps for a full revolution of the axis
 
 // Buzzer
 #define BUZZER_PIN 2
 
-// Keypad
-// https://github.com/mgesteiro/escornakeypad
+// Keypad  --> based on https://github.com/mgesteiro/escornakeypad
 #define KEYPAD_PIN A0
 #define KEYVALUE_FORWARD 230
 #define KEYVALUE_TURNLEFT 368
@@ -39,7 +35,6 @@
 #define EB_KP_LP_MIN_DURATION 900L   // long press minimum duration, ms
 #define EB_KP_DB_TIME 30L            // debouncing time, ms
 #define EB_KP_CHECK_MIN_INTERVAL 5L  // checking minimum interval, ms
-
 
 // LED
 #define SIMPLELED_PIN 13

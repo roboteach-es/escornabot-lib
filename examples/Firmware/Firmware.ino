@@ -1,11 +1,11 @@
 /**
  * Luci's FIRMWARE.
  * 
- * This is a preliminary version of Luci's firmware, with almost all 
- * the same functionalities as the current Escornabot firmware but 
+ * This is a preliminary version of Luci's firmware, with almost all
+ * the same functionalities as the current Escornabot's firmware but
  * with less complexity and overengineering.
  *
- * @file      Config.h
+ * @file      Firmware.ino
  * @author    mgesteiro
  * @date      20221225
  * @version   0.1.2-beta
@@ -15,8 +15,8 @@
 #define VERSION "0.1.2-beta"
 
 #include <Arduino.h>
-#include <Wire.h>
 #include <Escornabot-lib.h>
+#include "Config.h"
 
 Escornabot luci;
 uint32_t currentTime;
@@ -91,7 +91,7 @@ void startUpShow() {
 	delay(tshow);
 	luci.showKeyColor(EB_KP_KEY_GO); // white
 	delay(tshow);
-	// finish with Luci color for a while
+	// finish with Luci color
 	luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
 } // startUpShow()
 
