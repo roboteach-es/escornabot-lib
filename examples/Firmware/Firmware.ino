@@ -21,6 +21,10 @@
 Escornabot luci;
 uint32_t currentTime;
 
+#define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
+#define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
+#define RTTTL_TEST    ":d=16,o=4,b=200:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,c5,c#5,d5,d#5,e5,f5,f#5,g5,g#5,a5,a#5,b5,c6,c#6,d6,d#6,e6,f6,f#6,g6,g#6,a6,a#6,b6,c7,c#7,d7,d#7,e7,f7,f#7,g7,g#7,a7,a#7,b7,"
+
 #define PROGRAMMING 0
 #define EXECUTING   1
 uint8_t status = PROGRAMMING;
@@ -78,9 +82,8 @@ void loop() {
  * Start-up light and sound sequence.
  */
 void startUpShow() {
-	// start-up sequence: beep + all button colors + purple
-	luci.beep(EB_BEEP_DEFAULT, 100);
-	uint8_t tshow = 150;
+	// start-up sequence: all button colors + purple + tune
+	uint8_t tshow = 50;
 	luci.showKeyColor(EB_KP_KEY_FW); // blue
 	delay(tshow);
 	luci.showKeyColor(EB_KP_KEY_BW); // yellow
@@ -93,6 +96,8 @@ void startUpShow() {
 	delay(tshow);
 	// finish with Luci color
 	luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
+	// startup tune
+	luci.playRTTTL(RTTTL_STARTUP);
 } // startUpShow()
 
 /**
@@ -291,7 +296,7 @@ void processProgram()
 		{
 			// execution finished
 			luci.disableSM();
-			// play final melody()
+			luci.playRTTTL(RTTTL_FINISH);
 			luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
 			program_count = 0;  // reset program
 			program_index = 0;  // and index

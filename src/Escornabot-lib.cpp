@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro
- * @date      20221225
- * @version   0.1.2-beta
+ * @date      20221229
+ * @version   0.2.0-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -194,6 +194,106 @@ void Escornabot::playNote(uint16_t frequency, uint16_t duration)
 	beep(frequency, duration);
 	delay(duration);
 }
+
+const uint16_t EB_NOTES_FREQUENCIES[] = // 12 notes, 4 octaves (4 to 7)
+{
+//     C,   C#,    D,   D#,    E,    F,   F#,    G,   G#,    A,   A#,    B,
+	 262,  277,  294,  311,  330,  349,  370,  392,  415,  440,  466,  494,
+	 523,  554,  587,  622,  659,  698,  740,  784,  831,  880,  932,  987,
+	1046, 1108, 1174, 1244, 1318, 1396, 1479, 1567, 1661, 1760, 1864, 1975,
+	2093, 2217, 2349, 2489, 2637, 2793, 2959, 3135, 3322, 3520, 3729, 3951
+};
+
+/**
+ * Plays an RTTTL tune.
+ *
+ * @param tune  A string with the tune in RTTTL format
+ *
+ * @note More info about the RTTTL format here: https://github.com/ArminJo/PlayRtttl/#rtttl-format
+ */
+void Escornabot::playRTTTL(const char* tune)
+{
+	// song name - discarded
+	while (*tune && *tune != ':') tune++;
+	tune++;
+
+	// default tune parameters
+	uint8_t default_octave = 5;
+	uint16_t default_duration= 16, bpm = 320;
+	while (*tune && (*tune != ':'))
+	{
+		switch (*tune)
+		{
+		case 'd': // note duration
+			tune += 2; // skip 'd='
+			default_duration = atoi(tune);
+			while (*tune >= '0' && *tune <= '9') tune++; // discard used numbers
+			break;
+
+		case 'o': // octave
+			tune += 2; // skip 'o='
+			default_octave = atoi(tune);
+			while (*tune >= '0' && *tune <= '9') tune++; // discard used numbers
+			break;
+
+		case 'b': // beats per minute
+			tune += 2; // skip 'b='
+			bpm = atoi(tune);
+			while (*tune >= '0' && *tune <= '9') tune++; // discard used numbers
+			break;
+
+		default:
+			tune++; // discard invalid character
+		}
+	}
+	tune++; // discard ':'
+
+	// list of notes
+	uint16_t duration = default_duration;
+	int8_t note = -1;
+	uint8_t octave = default_octave;
+	while (*tune)
+	{
+		if (*tune >= '0' && *tune <= '9')
+		{
+			// consume numbers
+			if (note < 0) duration = atoi(tune);
+			else octave = atoi(tune);
+			while (*tune >= '0' && *tune <= '9') tune++; // discard used numbers
+		}
+		else
+		{
+			// consume notes
+			switch (*tune)
+			{
+				// C C# D D# E F F# G G# A A# B <-- octave
+				case 'p': note = 0; break;
+				case 'c': note = 1; break;
+				case 'd': note = 3; break;
+				case 'e': note = 5; break;
+				case 'f': note = 6; break;
+				case 'g': note = 8; break;
+				case 'a': note = 10; break;
+				case 'b': note = 12; break;
+				case '#': note++; break;
+				case ',': case '\0':
+					if (note != -1 && octave >= 4 && octave <= 8) {
+						if (note > 0)
+							tone(BUZZER_PIN, EB_NOTES_FREQUENCIES[((octave - 4) * 12) + note - 1]);
+						delay(1000 * 60 / bpm / duration * 4); // BPM usually expresses the number of quarter notes per minute
+						// see https://github.com/ArminJo/PlayRtttl/blob/master/src/PlayRtttl.hpp#L192
+						noTone(BUZZER_PIN);
+					}
+
+					duration = default_duration;
+					note = -1;
+					octave = default_octave;
+					break;
+			}
+			tune++; // next
+		}
+	}
+}  // playRTTTL()
 
 
 

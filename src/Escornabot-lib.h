@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro
- * @date      20221225
- * @version   0.1.2-beta
+ * @date      20221229
+ * @version   0.2.0-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "0.1.2-beta"
+#define EB_VERSION "0.2.0-beta"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -155,6 +155,7 @@ public:
 	// Buzzer
 	void beep(EB_T_BEEPS frequency, uint16_t duration);
 	void playNote(uint16_t frequency, uint16_t duration);
+	void playRTTTL(const char* tune);
 
 	// LED
 	void turnLED(uint8_t state);
@@ -193,9 +194,6 @@ private:
 	// Stepper motors
 	void _initCoilsPins();
 	void _setCoils(uint8_t stateR, uint8_t stateL);
-
-	// Buzzer
-	uint8_t _buzzer_pin;
 
 	// Neopixel
 	NeoPixel *_neopixel;

@@ -59,6 +59,8 @@ arranged in a particular physical configuration that allows it to move and turn 
 ## Documentation
 This library source code is documented using [Doxygen format](https://www.doxygen.org/manual/commands.html), although no documention has been generated yet.
 
+Meanwhile, in the [`examples`](examples/) folder, besides the [`firmware itself`](examples/Firmware/), there are several programs that may be useful to understand how it works.
+
 ## LICENSE
 
 This work is licensed under the [GNU General Public License v3.0](LICENSE). All media and data files that are not source code are licensed under the [Creative Commons Attribution 4.0 BY-SA license](LICENSE-CCBYSA40).
