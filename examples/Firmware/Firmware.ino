@@ -7,12 +7,13 @@
  *
  * @file      Firmware.ino
  * @author    mgesteiro
- * @date      20221225
- * @version   0.1.2-beta
+ * @date      20221229
+ * @version   0.2.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define VERSION "0.1.2-beta"
+#define FIRMWARE_VERSION "0.2.1-beta"
+//#define DEBUG_MODE
 
 #include <Arduino.h>
 #include <Escornabot-lib.h>
@@ -42,8 +43,10 @@ void setup(){
 	// banner
 	Serial.begin(9600);
 	Serial.print("Luci's FIRMWARE (v");
-	Serial.print(VERSION);
+	Serial.print(FIRMWARE_VERSION);
 	Serial.println(")");
+	// setup and start luci
+	luci.init();
 	startUpShow();
 }
 

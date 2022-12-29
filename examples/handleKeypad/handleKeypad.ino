@@ -14,6 +14,7 @@ Escornabot luci;
 void setup() {
 	Serial.begin(9600);
 	Serial.println("handleKeypad test for Luci");
+	luci.init();
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	luci.showKeyColor(EB_LUCI_COLOR);
 }

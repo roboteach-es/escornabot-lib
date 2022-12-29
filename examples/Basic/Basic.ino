@@ -10,6 +10,8 @@ void setup(){
 	// banner
 	Serial.begin(9600);
 	Serial.println("Escornalib basic test for Luci");
+	// setup luci
+	luci.init();
 	// start-up sequence: beep + Luci color
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	luci.showKeyColor(EB_LUCI_COLOR);

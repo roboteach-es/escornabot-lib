@@ -8,17 +8,18 @@
  * @file      Escornabot-lib.h
  * @author    mgesteiro
  * @date      20221229
- * @version   0.2.0-beta
+ * @version   0.2.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "0.2.0-beta"
+#define EB_VERSION "0.2.1-beta"
 
 #include <Arduino.h>
 #include <stdint.h>
+#include <avr/eeprom.h>
 #include "lib/NeoPixel.h"
 #include "Config.h"
 
@@ -98,6 +99,12 @@ typedef enum
 #define PREVIOUS 1
 #define SAVED    1
 
+// auto keypad configuration
+#define EB_KP_PULLUP_MARGIN 140
+// Index to the last 5 uint16_t EEPROM positions;
+// E2END = The last EEPROM address (bytes). 1023 for Arduino Nano 328
+#define EB_KP_EEPROM_VALUES_INDEX (uint16_t *)(E2END - 2 * 5 + 1)
+
 
 
 //
@@ -119,7 +126,6 @@ typedef enum
 	EB_CMD_TR_ALT = 7
 } EB_T_COMMANDS;
 
-#ifdef DEBUG_MODE
 const String EB_CMD_LABELS[] = 
 {
 	"NONE",
@@ -131,7 +137,6 @@ const String EB_CMD_LABELS[] =
 	"TURN LEFT ALT",
 	"TURN RIGHT ALT"
 };
-#endif
 
 #define EB_CMD_R_NOTHING_TO_DO   0
 #define EB_CMD_R_PENDING_ACTION  1
@@ -146,6 +151,7 @@ public:
 	// constructor and destructor
 	Escornabot();
 	virtual ~Escornabot();
+	void init();
 
 	// Stepper motors
 	void move(float cms);
@@ -166,6 +172,7 @@ public:
 	void showKeyColor(uint8_t key);
 
 	// Keypad
+	void autoConfigKeypad();
 	void configKeypad(
 		uint8_t KeypadPin,
 		int16_t KeypadValue_NN,

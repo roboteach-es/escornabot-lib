@@ -8,7 +8,7 @@
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro
  * @date      20221229
- * @version   0.2.0-beta
+ * @version   0.2.1-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -26,7 +26,27 @@
 /**
  * Constructor
  */
-Escornabot::Escornabot() {
+Escornabot::Escornabot()
+{
+	// moved to init() because of
+	// https://forum.arduino.cc/t/analogread-seems-not-working-into-a-class-constructor/109081/8
+}
+
+/**
+ * Destructor
+ */
+Escornabot::~Escornabot()
+{
+}
+
+/**
+ * Initialization function to be called in Arduino's setup().
+ * This is required due to Arduino architecture.
+ *
+ * @see https://forum.arduino.cc/t/analogread-seems-not-working-into-a-class-constructor/109081/8
+ */
+void Escornabot::init()
+{
 	// Stepper motors
 	_initCoilsPins();
 	// Buzzer
@@ -35,24 +55,27 @@ Escornabot::Escornabot() {
 	pinMode(SIMPLELED_PIN, OUTPUT);
 	// NeoPixel
 	_initNeoPixel(NEOPIXEL_PIN);
-	// Keypad with default (Config) values
+	// Keypad autoconfig: give a chance
+	autoConfigKeypad();
+	// Keypad with EEPROM values or default
+	uint16_t *eeprom_index = EB_KP_EEPROM_VALUES_INDEX;
+	uint16_t eeprom_values[5];
+	for (uint8_t i = 0; i < 5; i ++)
+	{
+		eeprom_values[i] = eeprom_read_word(eeprom_index);
+		eeprom_index++;
+	}
 	configKeypad(
-		// with values from Config.h
 		KEYPAD_PIN,
-		KEYVALUE_NONE,
-		KEYVALUE_FORWARD,
-		KEYVALUE_TURNLEFT,
-		KEYVALUE_GO,
-		KEYVALUE_TURNRIGHT,
-		KEYVALUE_BACKWARD
+		EB_KP_VALUE_NN,
+		eeprom_values[0], // FW
+		eeprom_values[1], // TL
+		eeprom_values[2], // GO
+		eeprom_values[3], // TR
+		eeprom_values[4]  // BW
 	);
+	// cleaning
 	clearKeypad(0);
-}
-
-/**
- * Destructor
- */
-Escornabot::~Escornabot() {
 }
 
 
@@ -402,34 +425,107 @@ void Escornabot::_initNeoPixel(int pin)
 ////////////////////////////////////////
 
 /**
+ * If any key is pressed when calling this function, a configuration procedure
+ * is started:
+ *
+ * 1. an alert of four beeps is sounded
+ * 2. waits until no key is pressed anymore (if any, after the four beeps)
+ * 3. waits for the user to press all the keys in the following order:
+ *    FW, TL, GO, TR, BW (from top to bottom, from left to right)
+ * 3. updates all five key values in the EEPROM (if different)
+ */
+void Escornabot::autoConfigKeypad()
+{
+	// detect key pressed to start
+	pinMode(KEYPAD_PIN, INPUT_PULLUP); // if not "pullupable" works as normal INPUT
+	bool press_detected = false;
+	uint16_t port_read_value = analogRead(KEYPAD_PIN);
+	if (
+		(port_read_value > EB_KP_PULLUP_MARGIN)
+		&& (port_read_value < (1023 - EB_KP_PULLUP_MARGIN))
+	)
+	{
+		// something is pressed
+		for (byte i=0; i < 4; i++)
+		{
+			beep(EB_BEEP_DEFAULT, 100);
+			delay(500);
+		}
+		press_detected = true;
+	}
+	if (!press_detected) return; // exit
+
+	// wait until no key is pressed anymore
+	port_read_value = analogRead(KEYPAD_PIN);
+	while (
+			(port_read_value > EB_KP_PULLUP_MARGIN)
+			&& (port_read_value < 1023 - EB_KP_PULLUP_MARGIN)
+		) port_read_value = analogRead(KEYPAD_PIN); // wait for the release
+
+	// read and save keys' values
+	uint16_t keypad_values[5];
+	for (byte i=0; i < 5; i++)
+	{
+		// read value
+		port_read_value = analogRead(KEYPAD_PIN);
+		while (
+			(port_read_value < EB_KP_PULLUP_MARGIN)
+			|| (port_read_value > 1023 - EB_KP_PULLUP_MARGIN)
+		) port_read_value = analogRead(KEYPAD_PIN); // wait for a key press
+
+		// store value for each key
+		keypad_values[i] = port_read_value;
+
+		// signal + delay
+		beep(EB_BEEP_DEFAULT, 100);
+		delay(350);
+	} // for 5 keys
+
+	// write/update values in eeprom
+	uint16_t *eeprom_index = EB_KP_EEPROM_VALUES_INDEX;
+	for (uint8_t i = 0; i < 5; i ++)
+	{
+		eeprom_update_word(eeprom_index, keypad_values[i]);
+		eeprom_index ++;
+	}
+} // autoConfigKeypad()
+
+/**
  * Updates the keypad configuration values: analog input pin and
- * analog reading values for every key.
+ * analog reading values for every key. If the key values are invalid
+ * (0X00 or 0XFFFF), the default Config.h values are used.
  *
  * @param KeypadPin  the analog pin to which the keypad is connected
- * @param KeypadValue_NN  analog value when no key is pressed
- * @param KeypadValue_FW  analog value for forward key
- * @param KeypadValue_TL  analog value for turn left key
- * @param KeypadValue_GO  analog value for go key
- * @param KeypadValue_TR  analog value for turn right key
- * @param KeypadValue_BW  analog value for forward key
+ * @param Key_NN  analog value when no key is pressed
+ * @param Key_FW  analog value for forward key
+ * @param Key_TL  analog value for turn left key
+ * @param Key_GO  analog value for go key
+ * @param Key_TR  analog value for turn right key
+ * @param Key_BW  analog value for forward key
  */
 void Escornabot::configKeypad(
 	uint8_t KeypadPin,
-	int16_t KeypadValue_NN,
-	int16_t KeypadValue_FW,
-	int16_t KeypadValue_TL,
-	int16_t KeypadValue_GO,
-	int16_t KeypadValue_TR,
-	int16_t KeypadValue_BW)
+	int16_t Key_NN,
+	int16_t Key_FW,
+	int16_t Key_TL,
+	int16_t Key_GO,
+	int16_t Key_TR,
+	int16_t Key_BW)
 {
 	_keypad_pin = KeypadPin;
 	pinMode(_keypad_pin, INPUT_PULLUP); // 2-wires, works if it's externally pulled-up too
-	_keypad_values[0] = KeypadValue_NN;
-	_keypad_values[1] = KeypadValue_FW;
-	_keypad_values[2] = KeypadValue_TL;
-	_keypad_values[3] = KeypadValue_GO;
-	_keypad_values[4] = KeypadValue_TR;
-	_keypad_values[5] = KeypadValue_BW;
+	if (Key_NN == 0x00 || Key_NN == 0xFFFF) _keypad_values[0] = EB_KP_KEY_NN;  // default Config.h
+	else _keypad_values[0] = Key_NN;
+	if (Key_FW == 0x00 || Key_FW == 0xFFFF) _keypad_values[1] = EB_KP_KEY_FW;  // default Config.h
+	else _keypad_values[1] = Key_FW;
+	if (Key_TL == 0x00 || Key_TL == 0xFFFF) _keypad_values[2] = EB_KP_KEY_TL;  // default Config.h
+	else _keypad_values[2] = Key_TL;
+	if (Key_GO == 0x00 || Key_GO == 0xFFFF) _keypad_values[3] = EB_KP_KEY_GO;  // default Config.h
+	else _keypad_values[3] = Key_GO;
+	if (Key_TR == 0x00 || Key_TR == 0xFFFF) _keypad_values[4] = EB_KP_KEY_TR;  // default Config.h
+	else _keypad_values[4] = Key_TR;
+	if (Key_BW == 0x00 || Key_BW == 0xFFFF) _keypad_values[5] = EB_KP_KEY_BW;  // default Config.h
+	else _keypad_values[5] = Key_BW;
 }
 
 /**
@@ -645,7 +741,7 @@ void Escornabot::prepareAction(EB_T_COMMANDS command, float value)
 	_exec_dp = _exec_steps * 27 / 100;  // deceleration point: 27% (final stretch)
 	if (_exec_dp > 230) _exec_dp = 230;
 
-	#ifdef DEBUG_MODE
+	#ifdef EB_DEBUG_MODE
 	Serial.print("PREPARING ");
 	Serial.println(EB_CMD_LABELS[command]);
 	Serial.print("Total STEPS: ");
@@ -674,11 +770,6 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 
 	uint32_t cTime = micros();
 	if (cTime - _exec_ptime < _exec_wait) return 1; // still pending steps
-
-	#ifdef DEBUG_MODE
-		//if (_microdelays_index < 200) _microdelays[_microdelays_index] = cTime - _exec_ptime;
-		//_microdelays_index ++;
-	#endif
 
 	// acceleration <-- update _exec_wait
 	if (_exec_steps > _exec_ap) _exec_wait -= 2; // acceleration
@@ -800,7 +891,7 @@ void Escornabot::handleStandby(uint32_t currentTime)
 //
 ////////////////////////////////////////
 
-#ifdef DEBUG_MODE
+#ifdef EB_DEBUG_MODE
 /**
  * Provides debug information about the library via serial port.
  */
