@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro
- * @date      20221229
- * @version   0.2.1-beta
+ * @date      20221230
+ * @version   0.2.2-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "0.2.1-beta"
+#define EB_VERSION "0.2.2-beta"
 
 #include <Arduino.h>
 #include <stdint.h>

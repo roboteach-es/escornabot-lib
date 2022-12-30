@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro
- * @date      20221229
- * @version   0.2.1-beta
+ * @date      20221230
+ * @version   0.2.2-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 

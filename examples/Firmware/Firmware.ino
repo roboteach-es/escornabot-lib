@@ -7,12 +7,12 @@
  *
  * @file      Firmware.ino
  * @author    mgesteiro
- * @date      20221229
- * @version   0.2.1-beta
+ * @date      20221230
+ * @version   0.2.2-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "0.2.1-beta"
+#define FIRMWARE_VERSION "0.2.2-beta"
 //#define DEBUG_MODE
 
 #include <Arduino.h>
@@ -22,8 +22,16 @@
 Escornabot luci;
 uint32_t currentTime;
 
+const float EB_ADVANCE    = 10.0;  // cms
+const float EB_ROTATE     = 90.0;  // degrees
+const float EB_ROTATE_ALT = 45.0;  // degrees
+const float EB_ADVANCE_DIAGONAL = sqrt(2 * square(EB_ADVANCE));
+
+
+
 #define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
 #define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
+#define RTTTL_PRESET  ":d=16,o=6,b=140:g,p,e,p,c,"
 #define RTTTL_TEST    ":d=16,o=4,b=200:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,c5,c#5,d5,d#5,e5,f5,f#5,g5,g#5,a5,a#5,b5,c6,c#6,d6,d#6,e6,f6,f#6,g6,g#6,a6,a#6,b6,c7,c#7,d7,d#7,e7,f7,f#7,g7,g#7,a7,a#7,b7,"
 
 #define PROGRAMMING 0
@@ -33,7 +41,7 @@ uint8_t status = PROGRAMMING;
 EB_T_COMMANDS program[128];  // list of actions saved
 uint8_t program_count = 0;   // number of commands in the program
 uint8_t program_index = 0;   // current command
-
+uint8_t num_alt_turns = 0;   // number of alternative turns, for diagonal moves
 
 /*
  *   S E T U P   &   L O O P   F U N C T I O N S
@@ -132,7 +140,8 @@ void stop(uint32_t currentTime)
 	luci.disableSM();
 	luci.clearKeypad(currentTime);
 	luci.beep(EB_BEEP_DEFAULT, 100);
-	luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
+	if (num_alt_turns % 2 == 0) luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
+	else luci.showColor(BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL * 0.4, 0); // orange, diagonal!
 	program_count = 0;  // reset program
 	program_index = 0;  // and index
 	status = PROGRAMMING;  // back to user input
@@ -173,6 +182,8 @@ void processKeyStroke(uint8_t kp_code)
 			addCommand(EB_CMD_TL);
 			break;
 		case EB_KP_KEY_GO:
+			if (program_count < 1) break;
+
 			luci.beep(EB_BEEP_DEFAULT, 100);
 			luci.showKeyColor(key);
 			status = EXECUTING;
@@ -205,6 +216,21 @@ void processKeyStroke(uint8_t kp_code)
 	{
 		switch (key)
 		{
+		case EB_KP_KEY_FW:
+			if
+			(
+				(program_count < 1)  // no program
+				&& !(num_alt_turns % 2)  // diagonal angle
+			) break;
+			// reset!!
+			luci.showKeyColor(key);
+			luci.beep(EB_BEEP_DEFAULT, 100);
+			delay(100);
+			luci.playRTTTL(RTTTL_PRESET);
+			program_count = 0;  // reset program
+			program_index = 0;  // and index
+			num_alt_turns = 0;  // and alternate turns!
+			break;
 		case EB_KP_KEY_TL:
 			luci.beep(EB_BEEP_FORWARD, 100);
 			luci.showKeyColor(key);
@@ -261,37 +287,41 @@ void processProgram()
 			case EB_CMD_FW:
 				luci.showKeyColor(EB_KP_KEY_FW);
 				luci.beep(EB_BEEP_FORWARD, 100);
-				luci.prepareAction(EB_CMD_FW, 10);
+				if (num_alt_turns % 2 == 0) luci.prepareAction(EB_CMD_FW, EB_ADVANCE);
+				else luci.prepareAction(EB_CMD_FW, EB_ADVANCE_DIAGONAL);
 				break;
 			case EB_CMD_TL:
 				luci.showKeyColor(EB_KP_KEY_TL);
 				luci.beep(EB_BEEP_TURNLEFT, 100);
-				luci.prepareAction(EB_CMD_TL, 90);
+				luci.prepareAction(EB_CMD_TL, EB_ROTATE);
 				break;
 			case EB_CMD_TR:
 				luci.showKeyColor(EB_KP_KEY_TR);
 				luci.beep(EB_BEEP_TURNRIGHT, 100);
-				luci.prepareAction(EB_CMD_TR, 90);
+				luci.prepareAction(EB_CMD_TR, EB_ROTATE);
 				break;
 			case EB_CMD_BW:
 				luci.showKeyColor(EB_KP_KEY_BW);
 				luci.beep(EB_BEEP_BACKWARD, 100);
-				luci.prepareAction(EB_CMD_BW, 10);
+				if (num_alt_turns % 2 == 0) luci.prepareAction(EB_CMD_BW, EB_ADVANCE);
+				else luci.prepareAction(EB_CMD_BW, EB_ADVANCE_DIAGONAL);
 				break;
 			case EB_CMD_PA:
 				luci.showKeyColor(EB_KP_KEY_BW);
 				luci.beep(EB_BEEP_BACKWARD, 100);
-				luci.prepareAction(EB_CMD_BW, 10); // same time as the movement
+				luci.prepareAction(EB_CMD_BW, EB_ADVANCE); // same time as the movement
 				break;
 			case EB_CMD_TL_ALT:
 				luci.showKeyColor(EB_KP_KEY_TL);
 				luci.beep(EB_BEEP_TURNLEFT, 100);
-				luci.prepareAction(EB_CMD_TL_ALT, 45); // half degrees
+				luci.prepareAction(EB_CMD_TL_ALT, EB_ROTATE_ALT); // half degrees
+				num_alt_turns ++;
 				break;
 			case EB_CMD_TR_ALT:
 				luci.showKeyColor(EB_KP_KEY_TR);
 				luci.beep(EB_BEEP_TURNRIGHT, 100);
-				luci.prepareAction(EB_CMD_TR_ALT, 45); // half degrees
+				luci.prepareAction(EB_CMD_TR_ALT, EB_ROTATE_ALT); // half degrees
+				num_alt_turns ++;
 				break;
 			}
 		}
@@ -300,7 +330,8 @@ void processProgram()
 			// execution finished
 			luci.disableSM();
 			luci.playRTTTL(RTTTL_FINISH);
-			luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
+			if (num_alt_turns % 2 == 0) luci.showKeyColor(EB_LUCI_COLOR); // input color, purple
+			else luci.showColor(BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL * 0.4, 0); // orange, diagonal!
 			program_count = 0;  // reset program
 			program_index = 0;  // and index
 			status = PROGRAMMING;  // back to user input
