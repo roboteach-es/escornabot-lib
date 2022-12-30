@@ -6,7 +6,7 @@
 Escornabot luci;
 
 
-void setup(){
+void setup() {
 	// banner
 	Serial.begin(9600);
 	Serial.println("Escornalib basic test for Luci");
@@ -19,8 +19,6 @@ void setup(){
 }
 
 void loop() {
-	// SQUARES!!
-
 	// advance
 	luci.showKeyColor(EB_KP_KEY_FW);  // blue
 	luci.beep(EB_BEEP_FORWARD, 100);
@@ -30,5 +28,4 @@ void loop() {
 	luci.showKeyColor(EB_KP_KEY_TR);  // green
 	luci.beep(EB_BEEP_TURNRIGHT, 100);
 	luci.turn(90);
-
 }

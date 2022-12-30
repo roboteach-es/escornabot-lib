@@ -8,11 +8,11 @@
  * @file      Firmware.ino
  * @author    mgesteiro
  * @date      20221230
- * @version   0.2.2-beta
+ * @version   0.2.3-beta
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "0.2.2-beta"
+#define FIRMWARE_VERSION "0.2.3-beta"
 //#define DEBUG_MODE
 
 #include <Arduino.h>
@@ -31,8 +31,7 @@ const float EB_ADVANCE_DIAGONAL = sqrt(2 * square(EB_ADVANCE));
 
 #define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
 #define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
-#define RTTTL_PRESET  ":d=16,o=6,b=140:g,p,e,p,c,"
-#define RTTTL_TEST    ":d=16,o=4,b=200:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,c5,c#5,d5,d#5,e5,f5,f#5,g5,g#5,a5,a#5,b5,c6,c#6,d6,d#6,e6,f6,f#6,g6,g#6,a6,a#6,b6,c7,c#7,d7,d#7,e7,f7,f#7,g7,g#7,a7,a#7,b7,"
+#define RTTTL_PRESET  ":d=8,o=4,b=320:d#6,e6,f#6,d#6,"
 
 #define PROGRAMMING 0
 #define EXECUTING   1
@@ -225,7 +224,7 @@ void processKeyStroke(uint8_t kp_code)
 			// reset!!
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_DEFAULT, 100);
-			delay(100);
+			delay(400);
 			luci.playRTTTL(RTTTL_PRESET);
 			program_count = 0;  // reset program
 			program_index = 0;  // and index
