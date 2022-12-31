@@ -13,6 +13,7 @@ Escornabot luci;
 
 
 void setup(){
+	luci.init();
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	luci.showKeyColor(EB_LUCI_COLOR);
 	delay(1000);
@@ -56,10 +57,12 @@ From a functional perspective, it is a device composed of:
 
 arranged in a particular physical configuration that allows it to move and turn in a surface, do sound and light, and accept user input, to perform different tasks (typically used as a **programmable buttoned floor robot**).
 
+
 ## Documentation
 This library source code is documented using [Doxygen format](https://www.doxygen.org/manual/commands.html), although no documention has been generated yet.
 
 Meanwhile, in the [`examples`](examples/) folder, besides the [`firmware itself`](examples/Firmware/), there are several programs that may be useful to understand how it works.
+
 
 ## LICENSE
 

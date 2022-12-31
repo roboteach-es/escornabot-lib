@@ -7,8 +7,8 @@
  *
  * @file      Config.h
  * @author    mgesteiro
- * @date      20221230
- * @version   0.2.2-beta
+ * @date      20230101
+ * @version   1.0.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -17,7 +17,8 @@
 #define WHEEL_DISTANCE 80.1f // mm (ground touching point to point) Luci: 80.1 (theoretical)
 
 // Stepper motors
-#define STEPPERMOTOR_STEPS_PER_SECOND 450.0f //475.0f // speed -> MAX=490, MIN=60
+#define STEPPERMOTOR_FIXED_REVERSED false // fix stepper motors with swapped cables
+#define STEPPERMOTOR_STEPS_PER_SECOND 450.0f // speed -> MAX=490, MIN=60
 // from https://github.com/mgesteiro/steppers#stepping, using full-stepping mode
 // theoretical value: 32 * 63,6840 = 2037,8864
 // practical value: 2048 (slips, gear teeth engagement, etc.)
@@ -26,8 +27,7 @@
 // Buzzer
 #define BUZZER_PIN 2
 
-// Keypad
-// https://github.com/mgesteiro/escornakeypad
+// Keypad  --> based on https://github.com/mgesteiro/escornakeypad
 #define KEYPAD_PIN A0
 #define EB_KP_VALUE_FW 230
 #define EB_KP_VALUE_TL 368
@@ -40,6 +40,8 @@
 #define EB_KP_DB_TIME 30L            // debouncing time, ms
 #define EB_KP_CHECK_MIN_INTERVAL 5L  // checking minimum interval, ms
 
+// SERIAL / BLUETOOTH
+#define EB_BAUDRATE 9600
 
 // LED
 #define SIMPLELED_PIN 13

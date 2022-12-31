@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro
- * @date      20221230
- * @version   0.2.2-beta
+ * @date      20230101
+ * @version   1.0.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -41,9 +41,16 @@ Escornabot::~Escornabot()
 
 /**
  * Initialization function to be called in Arduino's setup().
- * This is required due to Arduino architecture.
  *
- * @see https://forum.arduino.cc/t/analogread-seems-not-working-into-a-class-constructor/109081/8
+ * This function initializes the pins for the stepper motors, the buzzer, and
+ * the onboard LED. It also initializes the NeoPixel and the Serial port (if
+ * a Bluetooth dongle or any other device is used to communicate). Finally, the
+ * auto configuration routine for the keypad is invoqued just before
+ * configuring the keypad with the stored values (in the EEPROM), or the
+ * default ones in case they are invalid.
+ *
+ * @see an init function is required due to Arduino's architecture and constructors should be avoided:
+ *      https://forum.arduino.cc/t/analogread-seems-not-working-into-a-class-constructor/109081/8
  */
 void Escornabot::init()
 {
@@ -55,6 +62,8 @@ void Escornabot::init()
 	pinMode(SIMPLELED_PIN, OUTPUT);
 	// NeoPixel
 	_initNeoPixel(NEOPIXEL_PIN);
+	// Serial / Bluetooth
+	Serial.begin(EB_BAUDRATE);
 	// Keypad autoconfig: give a chance
 	autoConfigKeypad();
 	// Keypad with EEPROM values or default
@@ -96,9 +105,6 @@ void Escornabot::init()
  */
 void Escornabot::move(float cms)
 {
-	// fixReversed - stepper motors with swapped cables
-	if (_isReversed) cms = -cms;
-
 	// prepare action
 	EB_T_COMMANDS command = EB_CMD_FW;
 	if (cms < 0) command = EB_CMD_BW;
@@ -121,9 +127,6 @@ void Escornabot::move(float cms)
  */
 void Escornabot::turn(float degrees)
 {
-	// fixReversed - stepper motors with swapped cables
-	if (_isReversed) degrees = -degrees;
-
 	// prepare action
 	EB_T_COMMANDS command = EB_CMD_TR;
 	if (degrees < 0) command = EB_CMD_TL;
@@ -683,6 +686,63 @@ int16_t Escornabot::rawKeypad()
 
 ////////////////////////////////////////
 //
+// Serial / Blueetooth
+//
+////////////////////////////////////////
+
+/**
+ * Processes data comming through the Serial port and converts it into useful
+ * info, with the same format as handleKeypad().
+ *
+ * This is a high level management function, valid for logic control.
+ * This function should be called in the loop() as often as possible.
+ *
+ * @return  lo nibble -> key [EB_T_KP_KEYS],  hi nibble -> event [EB_T_KP_EVENTS]
+ */
+uint8_t Escornabot::handleSerial()
+{
+	char key = Serial.read();
+	switch (key)
+	{
+	case 'n':
+		return ((EB_KP_EVT_RELEASED << 4) | EB_KP_KEY_FW);
+		break;
+	case 'w':
+		return ((EB_KP_EVT_RELEASED << 4) | EB_KP_KEY_TL);
+		break;
+	case 'g':
+		return ((EB_KP_EVT_RELEASED << 4) | EB_KP_KEY_GO);
+		break;
+	case 'e':
+		return ((EB_KP_EVT_RELEASED << 4) | EB_KP_KEY_TR);
+		break;
+	case 's':
+		return ((EB_KP_EVT_RELEASED << 4) | EB_KP_KEY_BW);
+		break;
+	case 'N':
+		return ((EB_KP_EVT_LONGPRESSED << 4) | EB_KP_KEY_FW);
+		break;
+	case 'W':
+		return ((EB_KP_EVT_LONGPRESSED << 4) | EB_KP_KEY_TL);
+		break;
+	case 'G':
+		return ((EB_KP_EVT_LONGPRESSED << 4) | EB_KP_KEY_GO);
+		break;
+	case 'E':
+		return ((EB_KP_EVT_LONGPRESSED << 4) | EB_KP_KEY_TR);
+		break;
+	case 'S':
+		return ((EB_KP_EVT_LONGPRESSED << 4) | EB_KP_KEY_BW);
+		break;
+	default:
+		return 0; // just ignore it, even CR & LF
+	}
+}  // handleSerial()
+
+
+
+////////////////////////////////////////
+//
 // Commands
 //
 ////////////////////////////////////////
@@ -697,6 +757,18 @@ int16_t Escornabot::rawKeypad()
  */
 void Escornabot::prepareAction(EB_T_COMMANDS command, float value)
 {
+	// fixReversed - stepper motors with swapped cables
+	if (_isReversed)
+		switch (command)
+		{
+			case EB_CMD_FW: command = EB_CMD_BW; break;
+			case EB_CMD_TL: command = EB_CMD_TR; break;
+			case EB_CMD_TR: command = EB_CMD_TL; break;
+			case EB_CMD_BW: command = EB_CMD_FW; break;
+			case EB_CMD_TL_ALT: command = EB_CMD_TR_ALT; break;
+			case EB_CMD_TR_ALT: command = EB_CMD_TL_ALT; break;
+		}
+	// continue preparation
 	value = abs(value);
 	switch (command)
 	{

@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro
- * @date      20221230
- * @version   0.2.2-beta
+ * @date      20230101
+ * @version   1.0.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -186,6 +186,9 @@ public:
 	void clearKeypad(uint32_t currentTime);
 	bool isButtonPressed(String button);
 	int16_t rawKeypad();
+
+	// Serial / Blueetooth
+	uint8_t handleSerial();
 
 	// Commands
 	void prepareAction(EB_T_COMMANDS command, float value);

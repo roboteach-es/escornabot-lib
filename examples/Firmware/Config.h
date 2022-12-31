@@ -6,8 +6,8 @@
  *
  * @file      Config.h
  * @author    mgesteiro
- * @date      20221230
- * @version   0.2.2-beta
+ * @date      20230101
+ * @version   1.0.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -16,6 +16,7 @@
 #define WHEEL_DISTANCE 80.1f // mm (ground touching point to point)
 
 // Stepper motors
+#define STEPPERMOTOR_FIXED_REVERSED false // fix stepper motors with swapped cables
 #define STEPPERMOTOR_STEPS_PER_SECOND 450.0f // speed -> MAX=490, MIN=60
 // from https://github.com/mgesteiro/steppers#stepping, using full-stepping mode
 #define STEPPERMOTOR_FULLREVOLUTION_STEPS 2048.0f // number of steps for a full revolution of the axis
@@ -35,6 +36,9 @@
 #define EB_KP_LP_MIN_DURATION 900L   // long press minimum duration, ms
 #define EB_KP_DB_TIME 30L            // debouncing time, ms
 #define EB_KP_CHECK_MIN_INTERVAL 5L  // checking minimum interval, ms
+
+// SERIAL / BLUETOOTH
+#define EB_BAUDRATE 9600
 
 // LED
 #define SIMPLELED_PIN 13

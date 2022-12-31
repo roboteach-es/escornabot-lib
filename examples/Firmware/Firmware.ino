@@ -7,12 +7,12 @@
  *
  * @file      Firmware.ino
  * @author    mgesteiro
- * @date      20221230
- * @version   0.2.3-beta
+ * @date      20230101
+ * @version   1.0.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "0.2.3-beta"
+#define FIRMWARE_VERSION "1.0.0"
 //#define DEBUG_MODE
 
 #include <Arduino.h>
@@ -48,13 +48,19 @@ uint8_t num_alt_turns = 0;   // number of alternative turns, for diagonal moves
 
 void setup(){
 	// banner
-	Serial.begin(9600);
+	Serial.begin(EB_BAUDRATE); // 9600 by default
 	Serial.print("Luci's FIRMWARE (v");
 	Serial.print(FIRMWARE_VERSION);
 	Serial.println(")");
 	// setup and start luci
 	luci.init();
 	startUpShow();
+	// purge serial queue
+	while (Serial.read() != -1);
+	// fix problem with swapped cables in steppers
+	#if STEPPERMOTOR_FIXED_REVERSED
+	luci.fixReversed();
+	#endif
 }
 
 void loop() {
@@ -67,16 +73,20 @@ void loop() {
 	// watch keypad
 	uint8_t kp_code = luci.handleKeypad(currentTime);
 
+	// watch serial/bluetooth
+	uint8_t bt_code = luci.handleSerial();
+
 	// conduct!
 	switch (status)
 	{
 	case PROGRAMMING:
 		// accept commands
 		if (kp_code) processKeyStroke(kp_code);
+		if (bt_code) processKeyStroke(bt_code);
 		break;
 	case EXECUTING:
 		// continue sequence
-		if (kp_code) stop(currentTime); // abort if any key is pressed
+		if (kp_code || bt_code) stop(currentTime); // abort if any input
 		else processProgram();
 		break;
 	}
