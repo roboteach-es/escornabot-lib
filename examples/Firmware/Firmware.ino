@@ -52,6 +52,7 @@ void setup(){
 	Serial.print("Luci's FIRMWARE (v");
 	Serial.print(FIRMWARE_VERSION);
 	Serial.println(")");
+	Serial.flush();
 	// setup and start luci
 	luci.init();
 	startUpShow();

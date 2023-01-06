@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro
- * @date      20230101
- * @version   1.0.0
+ * @date      20230106
+ * @version   1.0.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -176,13 +176,13 @@ void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
 	// PORTB maps to Arduino digital pins 8 to 13 The two high bits (6 & 7) map to the crystal pins and are not usable
 	// RightMotor - pins 11,10,9,8 -> PORTB bits[3-0] = stateR bits[3-0]
 	// (a & ~mask) | (b & mask)
-	// a -> PINB  b->stateR  mask->B00001111
+	// a -> PORTB  b->stateR  mask->B00001111
 	PORTB = (PORTB & B11110000) | (stateR & B00001111);
 
 	// PORTD maps to Arduino digital pins 0 to 7
 	// LeftMotor - pins 7,6,5,4 -> PORTD bits[7-4] = stateL bits[3-0]
 	// (a & ~mask) | (b & mask)
-	// a -> PIND  b->(stateL << 4)  mask->B11110000
+	// a -> PORTD  b->(stateL << 4)  mask->B11110000
 	PORTD = (PORTD & B00001111) | (stateL << 4); // implicit mask in second part
 }
 
@@ -563,6 +563,9 @@ EB_T_KP_KEYS Escornabot::getPressedKey()
 
 /**
  * Processes the key strokes and converts them, using timing, into useful info.
+ * It also performs key press/release debouncing. It has an autolimited
+ * resolution of EB_KP_CHECK_MIN_INTERVAL milliseconds (5 by default), that can
+ * be changed in the Config.h file.
  * 
  * This is a high level management function, valid for logic control.
  * This function should be called in the loop() as often as possible.
@@ -775,24 +778,24 @@ void Escornabot::prepareAction(EB_T_COMMANDS command, float value)
 	case EB_CMD_FW : // FORWARD
 		_exec_steps = value * 10 * STEPPERS_STEPS_MM;  // # steps, implicit trunc()
 		_exec_drinit = 0;  // initial driving state index
-		_exec_drinc = 1;  // driving index groth direction
+		_exec_drinc = 1;  // driving index growth direction
 		break;
 	case EB_CMD_BW : // BACKWARD
 		_exec_steps = value * 10 * STEPPERS_STEPS_MM;  // # steps, implicit trunc()
 		_exec_drinit = EB_SM_DRIVING_SEQUENCE_MAX;  // initial driving state index
-		_exec_drinc = -1;  // driving index groth direction
+		_exec_drinc = -1;  // driving index growth direction
 		break;
 	case EB_CMD_TL : // TURN LEFT
 	case EB_CMD_TL_ALT : // TURN LEFT ALTERNATE
 		_exec_steps = value * STEPPERS_STEPS_DEG;  // # steps, implicit trunc()
 		_exec_drinit = EB_SM_DRIVING_SEQUENCE_MAX;  // initial driving state index
-		_exec_drinc = -1;  // driving index groth direction
+		_exec_drinc = -1;  // driving index growth direction
 		break;
 	case EB_CMD_TR : // TURN RIGHT
 	case EB_CMD_TR_ALT : // TURN RIGHT ALTERNATE
 		_exec_steps = value * STEPPERS_STEPS_DEG;  // # steps, implicit trunc()
 		_exec_drinit = 0;  // initial driving state index
-		_exec_drinc = 1;  // driving index groth direction
+		_exec_drinc = 1;  // driving index growth direction
 		break;
 	case EB_CMD_PA : // PAUSE <-- same time/steps as advance
 		_exec_steps = value * 10 * STEPPERS_STEPS_MM;  // # steps, implicit trunc()

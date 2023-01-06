@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro
- * @date      20230101
- * @version   1.0.0
+ * @date      20230106
+ * @version   1.0.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "0.2.2-beta"
+#define EB_VERSION "1.0.1"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -34,7 +34,7 @@
 #define STEPPERS_STEPS_DEG float((ROTATION_CIRCUMFERENCE/360) * STEPPERS_STEPS_MM) // how many steps to rotate the robot 1 degree
 
 const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0011, B0110, B1100, B1001};  // full drive - stronger
-// const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0001, B0010, B0100, B1000};  // wave drive - less consume
+// const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0001, B0010, B0100, B1000};  // wave drive - less consumption
 #define EB_SM_DRIVING_SEQUENCE_MAX sizeof(EB_SM_DRIVING_SEQUENCE) - 1
 
 
@@ -218,13 +218,13 @@ private:
 	uint32_t _keypad_previousTime;              // previous time
 
 	// Command execution
-	uint16_t _exec_steps;   // # steps for the current action
-	uint16_t _exec_wait;    // delay between steps, microseconds
-	uint16_t _exec_ap;      // acceleration point: #steps up to accelerate
-	uint16_t _exec_dp;      // deceleration point: #steps to start deceleration
+	uint32_t _exec_steps;   // # steps for the current action
+	uint32_t _exec_wait;    // delay between steps, microseconds
+	uint32_t _exec_ap;      // acceleration point: #steps up to accelerate
+	uint32_t _exec_dp;      // deceleration point: #steps to start deceleration
 	uint8_t  _exec_drinit;  // initial driving sequence index
-	int8_t   _exec_drinc;   // driving sequence index groth sign
-	uint16_t _exec_drindex; // driving sequence index
+	int8_t   _exec_drinc;   // driving sequence index growth sign
+	uint32_t _exec_drindex; // driving sequence index
 	uint32_t _exec_ptime;   // previous execution time
 
 	// Extra
