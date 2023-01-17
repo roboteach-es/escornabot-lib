@@ -41,6 +41,8 @@ void loop() {
 
 You can try now some of the examples from the menu `File → Examples → Escornabot-lib`.
 
+![Arduino2-libraries](images/Arduino2-libraries.png)
+
 
 ## Escornabot
 **Escornabot** is an **educational open-source and open-hardware ROBOT**, created in [Galicia in 2014](https://oshwdem.org/2014/11/se-acabo-pulpo/) and evolving since then.
