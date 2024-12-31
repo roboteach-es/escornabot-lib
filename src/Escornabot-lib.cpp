@@ -6,9 +6,9 @@
  * escornabot.org.
  *
  * @file      Escornabot-lib.cpp
- * @author    mgesteiro
- * @date      20230106
- * @version   1.0.1
+ * @author    mgesteiro einsua
+ * @date      20250101
+ * @version   1.1.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -85,7 +85,7 @@ void Escornabot::init()
 	);
 	// cleaning
 	clearKeypad(0);
-}
+}  // init()
 
 
 
@@ -114,7 +114,7 @@ void Escornabot::move(float cms)
 	while (handleAction(millis(), command) != EB_CMD_R_FINISHED_ACTION);
 
 	// finish
-	disableSM();
+	disableStepperMotors();
 
 }  // move()
 
@@ -136,17 +136,17 @@ void Escornabot::turn(float degrees)
 	while (handleAction(millis(), command) != EB_CMD_R_FINISHED_ACTION);
 
 	// finish
-	disableSM();
+	disableStepperMotors();
 
 }  // turn()
 
 /**
  * Disable the stepper motors (switching off the coils).
  */
-void Escornabot::disableSM()
+void Escornabot::disableStepperMotors()
 {
 	_setCoils(0, 0);
-}
+}  // disableStepperMotors()
 
 /**
  * Initializes the output pins for the stepper motor coils.
@@ -157,7 +157,7 @@ void Escornabot::_initCoilsPins()
 	DDRB = DDRB | B00001111;  // pins x,x,x,x,11,10,9,8 as OUTPUT - Right motor
 	// PORTD maps to Arduino digital pins 0 to 7. Pins 0 and 1 are TX and RX, manipulate with care.
 	DDRD = DDRD | B11110000;  // pins 7,6,5,4,x,x,x,x as OUTPUT - Left motor
-}
+}  // _initCoilsPins()
 
 /**
  * Sets the stepper motor coils.
@@ -184,7 +184,7 @@ void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
 	// (a & ~mask) | (b & mask)
 	// a -> PORTD  b->(stateL << 4)  mask->B11110000
 	PORTD = (PORTD & B00001111) | (stateL << 4); // implicit mask in second part
-}
+}  // _setCoils()
 
 
 
@@ -195,41 +195,39 @@ void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
 ////////////////////////////////////////
 
 /**
- * Plays the frequency provided during the time indicated.
+ * Plays the specified BEEP for the indicated duration.
  *
- * @param frequency  Which frequency in Hz to play
+ * @param beepid     Which beep to play
  * @param duration   Duration, in milliseconds, of the sound
  *
  * @note this function is non-blocking and returns inmediatly.
  */
-void Escornabot::beep(EB_T_BEEPS frequency, uint16_t duration)
+void Escornabot::beep(EB_T_BEEPS beepid, uint16_t duration)
 {
-	tone(BUZZER_PIN, frequency, duration);
-}
+	tone(BUZZER_PIN, EB_BEEP_FREQUENCIES[beepid], duration);
+}  // beep()
 
 /**
- * Plays the frequency provided during the time indicated.
+ * Plays the frequency provided during the indicated time and may wait until finished.
  *
  * @param frequency  Which frequency in Hz to play
  * @param duration   Duration, in milliseconds, of the sound
- *
- * @note this function is blocking (wait for the note to be finished).
+ * @param blocking   Indicate if the method is blocking or returns immediately
  */
-void Escornabot::playNote(uint16_t frequency, uint16_t duration)
+void Escornabot::playTone(uint16_t frequency, uint16_t duration, bool blocking)
 {
-	beep(frequency, duration);
-	delay(duration);
-}
+	tone(BUZZER_PIN, frequency, duration);
+	if (blocking) delay(duration); // wait for it
+}  // playTone()
 
 const uint16_t EB_NOTES_FREQUENCIES[] = // 12 notes, 4 octaves (4 to 7)
 {
-//     C,   C#,    D,   D#,    E,    F,   F#,    G,   G#,    A,   A#,    B,
+	// C,   C#,    D,   D#,    E,    F,   F#,    G,   G#,    A,   A#,    B,
 	 262,  277,  294,  311,  330,  349,  370,  392,  415,  440,  466,  494,
 	 523,  554,  587,  622,  659,  698,  740,  784,  831,  880,  932,  987,
 	1046, 1108, 1174, 1244, 1318, 1396, 1479, 1567, 1661, 1760, 1864, 1975,
 	2093, 2217, 2349, 2489, 2637, 2793, 2959, 3135, 3322, 3520, 3729, 3951
 };
-
 /**
  * Plays an RTTTL tune.
  *
@@ -337,7 +335,7 @@ void Escornabot::playRTTTL(const char* tune)
 void Escornabot::turnLED(uint8_t state)
 {
 	digitalWrite(SIMPLELED_PIN, state);
-}
+}  // turnLED()
 
 /**
  * Blinks the Escornabot LED a number o times.
@@ -354,7 +352,7 @@ void Escornabot::blinkLED(uint8_t times)
 		delay(200);
 		times--;
 	}
-}
+}  // blinkLED()
 
 
 
@@ -373,19 +371,19 @@ void Escornabot::blinkLED(uint8_t times)
  */
 void Escornabot::showColor(uint8_t R, uint8_t G, uint8_t B)
 {
-	//_neopixel->clear(); // Set all pixel colors to 'off'
 	_neopixel->setPixelColor(0, _neopixel->Color(R, G, B));
 	_neopixel->show();
-}
+}  // showColor()
 
 /**
  * Shows the color associated with the selected key in the Escornabot NeoPixel.
  * 
  * @param key  Which key color to be shown.
  */
-void Escornabot::showKeyColor(uint8_t key)
+void Escornabot::showKeyColor(EB_T_KP_KEYS key)
 {
-	switch (key) {
+	switch (key)
+	{
 	case EB_KP_KEY_NN:  // NONE
 		showColor(0, 0, 0);  // off
 		break;
@@ -401,11 +399,8 @@ void Escornabot::showKeyColor(uint8_t key)
 	case EB_KP_KEY_TR:  // TR
 		showColor(0, BRIGHTNESS_LEVEL, 0);  // green
 		break;
-	case EB_KP_KEY_BW:
+	case EB_KP_KEY_BW:  // BW
 		showColor(BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL, 0);  // yellow
-		break;
-	case EB_LUCI_COLOR:
-		showColor(BRIGHTNESS_LEVEL, 0, BRIGHTNESS_LEVEL);  // purple
 	}
 }  // showKeyColor()
 
@@ -417,7 +412,7 @@ void Escornabot::_initNeoPixel(int pin)
 	// initializes our ONE pixel strip
 	_neopixel = new NeoPixel(1, pin, NEO_GRB + NEO_KHZ800);
 	_neopixel->begin();
-}
+}  // _initNeoPixel()
 
 
 
@@ -491,7 +486,7 @@ void Escornabot::autoConfigKeypad()
 		eeprom_update_word(eeprom_index, keypad_values[i]);
 		eeprom_index ++;
 	}
-} // autoConfigKeypad()
+}  // autoConfigKeypad()
 
 /**
  * Updates the keypad configuration values: analog input pin and
@@ -529,7 +524,7 @@ void Escornabot::configKeypad(
 	else _keypad_values[4] = Key_TR;
 	if (Key_BW == 0x00 || Key_BW == 0xFFFF) _keypad_values[5] = EB_KP_KEY_BW;  // default Config.h
 	else _keypad_values[5] = Key_BW;
-}
+}  // configKeypad()
 
 /**
  * Scans the keypad port and return the current active key.
@@ -645,7 +640,7 @@ uint8_t Escornabot::handleKeypad(uint32_t currentTime)
 		_keypad_previousTime = currentTime;
 	}
 	return result;
-} // handleKeypad()
+}  // handleKeypad()
 
 /**
  * Clear all internal states of the keypad management process.
@@ -658,7 +653,7 @@ void Escornabot::clearKeypad(uint32_t currentTime)
 	memset(_keypad_key_state, 0, sizeof(_keypad_key_state));
 	memset(_keypad_pressed_time, 0, sizeof(_keypad_pressed_time));
 	_keypad_previousTime = currentTime;
-}
+}  // clearKeypad()
 
 /**
  * Checks if the named button is being pressed.
@@ -673,7 +668,7 @@ bool Escornabot::isButtonPressed(String label)
 	int8_t keyPressed = getPressedKey();
 	if (label == EB_KP_KEYS_LABELS[keyPressed]) return true;
 	return false;
-}
+}  // isButtonPressed()
 
 /**
  * Lowest level reading function of the keypad input pin.
@@ -683,7 +678,7 @@ bool Escornabot::isButtonPressed(String label)
 int16_t Escornabot::rawKeypad()
 {
 	return analogRead(_keypad_pin);
-}
+}  // rawKeypad()
 
 
 
@@ -826,7 +821,7 @@ void Escornabot::prepareAction(EB_T_COMMANDS command, float value)
 	Serial.print("Deceleration point: ");
 	Serial.println(_exec_dp);
 	#endif
-} // prepareAction()
+}  // prepareAction()
 
 /**
  * Function responsible for executing actions/movement. This function keeps its own
@@ -890,7 +885,7 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 	// next command?
 	if (_exec_steps > 0) return 1;  // still pending steps
 	return 2;  // finished movement, time for next
-} // handleAction()
+}  // handleAction()
 
 /**
  * Stop current Action (if any) execution.
@@ -902,7 +897,7 @@ void Escornabot::stopAction(uint32_t currentTime)
 {
 	// shutdown execution
 	_exec_steps = 0;
-}
+}  // stopAction()
 
 
 
@@ -921,7 +916,7 @@ void Escornabot::stopAction(uint32_t currentTime)
 void Escornabot::fixReversed()
 {
 	_isReversed = true;
-}
+}  // fixReversed()
 
 /**
  * This function takes care of the idle state of the Escornabot.
@@ -950,7 +945,8 @@ void Escornabot::handleStandby(uint32_t currentTime)
 	}
 
 	// alert: "still ON" every 30 s of inactivity
-	if (currentTime - _standby_previousTime > 30000) {
+	if (currentTime - _standby_previousTime > 30000)
+	{
 		beep(EB_BEEP_DEFAULT, 25);
 		delay(50);
 		beep(EB_BEEP_DEFAULT, 25);
@@ -975,5 +971,5 @@ void Escornabot::debug()
 	// debug info
 	Serial.print("Escornabot-lib v");
 	Serial.println(EB_VERSION);
-}
+}  // debug()
 #endif

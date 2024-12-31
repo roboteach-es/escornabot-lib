@@ -6,15 +6,15 @@
  * escornabot.org.
  *
  * @file      Config.h
- * @author    mgesteiro
- * @date      20230101
- * @version   1.0.0
+ * @author    mgesteiro einsua
+ * @date      20250101
+ * @version   1.1.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 // Escornabot geometry
-#define WHEEL_DIAMETER 75.5f // mm Luci: 75.5 (theoretical)
-#define WHEEL_DISTANCE 80.1f // mm (ground touching point to point) Luci: 80.1 (theoretical)
+#define WHEEL_DIAMETER 75.5f // mm - Luci: 75.5 (theoretical)
+#define WHEEL_DISTANCE 80.1f // mm (ground touching point to point) - Luci: 80.1 (theoretical)
 
 // Stepper motors
 #define STEPPERMOTOR_FIXED_REVERSED false // fix stepper motors with swapped cables

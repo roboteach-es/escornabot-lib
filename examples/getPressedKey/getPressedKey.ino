@@ -14,7 +14,7 @@ void setup() {
 	Serial.println("Luci's getPressedKey() test");
 	luci.init();
 	luci.beep(EB_BEEP_DEFAULT, 100);
-	luci.showKeyColor(EB_LUCI_COLOR);
+	luci.showColor(50, 0, 20); // purple
 }
 
 void loop() {

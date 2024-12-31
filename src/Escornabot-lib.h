@@ -6,16 +6,16 @@
  * escornabot.org.
  *
  * @file      Escornabot-lib.h
- * @author    mgesteiro
- * @date      20230106
- * @version   1.0.1
+ * @author    mgesteiro einsua
+ * @date      20250101
+ * @version   1.1.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "1.0.1"
+#define EB_VERSION "1.1.0"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -42,32 +42,41 @@ const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0011, B0110, B1100, B1001};  // full 
 //
 // BUZZER                            //
 //
-typedef enum
+/**
+ * Definition of all the possible BEEPs in an Escornabot.
+ */
+typedef enum: uint8_t
 {
-	EB_BEEP_DEFAULT   = 4699,  // D8
-	EB_BEEP_FORWARD   = 2637,  // E7
-	EB_BEEP_TURNLEFT  = 2217,  // C#7
-	EB_BEEP_TURNRIGHT = 4434,  // C#8
-	EB_BEEP_BACKWARD  = 3520   // A7
+	EB_BEEP_DEFAULT   = 0,
+	EB_BEEP_FORWARD   = 1,
+	EB_BEEP_TURNLEFT  = 2,
+	EB_BEEP_TURNRIGHT = 3,
+	EB_BEEP_BACKWARD  = 4
 } EB_T_BEEPS;
+const uint16_t EB_BEEP_FREQUENCIES[] =
+{
+	3135,  // EB_BEEP_DEFAULT   = G7 - Sol
+	2349,  // EB_BEEP_FORWARD   = D7 - Re
+	2093,  // EB_BEEP_TURNLEFT  = C7 - Do
+	2637,  // EB_BEEP_TURNRIGHT = E7 - Mi
+	2793   // EB_BEEP_BACKWARD  = F7 - Fa
+};
 
 
 
 //
 // NEOPIXEL                          //
 //
-#define EB_LUCI_COLOR 10
 
 
 
 //
 // KEYPAD                            //
 //
-
 /**
  * Definition of all the possible KEYs in an Escornabot keypad.
  */
-typedef enum
+typedef enum: uint8_t
 {
 	EB_KP_KEY_NN = 0,
 	EB_KP_KEY_FW = 1,
@@ -77,12 +86,20 @@ typedef enum
 	EB_KP_KEY_BW = 5
 } EB_T_KP_KEYS;
 #define EB_T_KP_KEYS_SIZE 6
-const String EB_KP_KEYS_LABELS[] = {"NONE", "FORWARD", "TURN LEFT", "GO", "TURN RIGHT", "BACKWARD"};
+const String EB_KP_KEYS_LABELS[] =
+{
+	"NONE",
+	"FORWARD",
+	"TURN LEFT",
+	"GO",
+	"TURN RIGHT",
+	"BACKWARD"
+};
 
 /**
  * Definition of all the possible EVENTs handling an Escornabot keypad.
  */
-typedef enum
+typedef enum: uint8_t
 {
 	EB_KP_EVT_NONE         = 0,
 	EB_KP_EVT_PRESSED      = 1,
@@ -91,7 +108,7 @@ typedef enum
 	EB_KP_EVT_LONGRELEASED = 4
 } EB_T_KP_EVENTS;
 
-// for code clarity
+// for code readability
 #define OFF      0
 #define ON       1
 #define STALLED  2
@@ -110,11 +127,10 @@ typedef enum
 //
 // COMMANDS                          //
 //
-
 /**
  * Definition of all the possible COMMANDs that an Escornabot can process.
  */
-typedef enum
+typedef enum: uint8_t
 {
 	EB_CMD_NN     = 0,
 	EB_CMD_FW     = 1,
@@ -125,8 +141,7 @@ typedef enum
 	EB_CMD_TL_ALT = 6,
 	EB_CMD_TR_ALT = 7
 } EB_T_COMMANDS;
-
-const String EB_CMD_LABELS[] = 
+const String EB_CMD_LABELS[] =
 {
 	"NONE",
 	"MOVE FORWARD",
@@ -138,6 +153,7 @@ const String EB_CMD_LABELS[] =
 	"TURN RIGHT ALT"
 };
 
+// Return codes for the command handling routine
 #define EB_CMD_R_NOTHING_TO_DO   0
 #define EB_CMD_R_PENDING_ACTION  1
 #define EB_CMD_R_FINISHED_ACTION 2
@@ -156,11 +172,11 @@ public:
 	// Stepper motors
 	void move(float cms);
 	void turn(float degrees);
-	void disableSM();
+	void disableStepperMotors();
 
 	// Buzzer
-	void beep(EB_T_BEEPS frequency, uint16_t duration);
-	void playNote(uint16_t frequency, uint16_t duration);
+	void beep(EB_T_BEEPS beepid, uint16_t duration);
+	void playTone(uint16_t frequency, uint16_t duration, bool blocking);
 	void playRTTTL(const char* tune);
 
 	// LED
@@ -169,7 +185,7 @@ public:
 
 	// NeoPixel
 	void showColor(uint8_t R, uint8_t G, uint8_t B);
-	void showKeyColor(uint8_t key);
+	void showKeyColor(EB_T_KP_KEYS key);
 
 	// Keypad
 	void autoConfigKeypad();

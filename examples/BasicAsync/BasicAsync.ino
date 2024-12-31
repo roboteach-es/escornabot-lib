@@ -20,7 +20,7 @@ void setup() {
 	luci.init();
 	// start-up sequence: beep + Luci color
 	luci.beep(EB_BEEP_DEFAULT, 100);
-	luci.showKeyColor(EB_LUCI_COLOR);
+	luci.showColor(50, 0, 20); // purple
 	delay(1000);
 
 	// prepare forward movement

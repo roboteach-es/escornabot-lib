@@ -15,7 +15,7 @@ Escornabot luci;
 void setup(){
 	luci.init();
 	luci.beep(EB_BEEP_DEFAULT, 100);
-	luci.showKeyColor(EB_LUCI_COLOR);
+	luci.showColor(20, 0, 50); // purple
 	delay(1000);
 }
 
