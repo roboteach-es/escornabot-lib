@@ -32,6 +32,7 @@ handleKeypad	KEYWORD2
 clearKeypad	KEYWORD2
 isButtonPressed	KEYWORD2
 rawKeypad	KEYWORD2
+getKeypadValues	KEYWORD2
 
 prepareAction	KEYWORD2
 handleAction	KEYWORD2

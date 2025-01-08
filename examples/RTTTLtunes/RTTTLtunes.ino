@@ -3,7 +3,7 @@
  */
 
 #include <Escornabot-lib.h>
-Escornabot luci;
+Escornabot luci; // create Escornabot object
 
 // NOTE: on-line player at https://adamonsoon.github.io/rtttl-play/
 
@@ -23,23 +23,24 @@ const char *songs[] =
 
 //"scale:d=16,o=4,b=200:c,c#,d,d#,e,f,f#,g,g#,a,a#,b,c5,c#5,d5,d#5,e5,f5,f#5,g5,g#5,a5,a#5,b5,c6,c#6,d6,d#6,e6,f6,f#6,g6,g#6,a6,a#6,b6,c7,c#7,d7,d#7,e7,f7,f#7,g7,g#7,a7,a#7,b7,"
 
-void setup() {
-	// banner
-	Serial.begin(9600);
-	Serial.println("Escornalib RTTTL test for Luci\n");
+void setup()
+{
 	// setup luci
-	luci.init();
+	luci.init(); // 9600 baudrate
+	// banner
+	Serial.println("Escornalib RTTTL test for Luci\n");
 	// start-up sequence: beep + Luci color
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	luci.showColor(50, 0, 20); // purple
 	delay(1000);
-}
+}  // setup()
 
-void loop() {
+void loop()
+{
 	for (int i = 0; i < 10; i ++)
 	{
 		Serial.println(songs[i]);
 		luci.playRTTTL(songs[i]);
 		delay(1000);  
 	}
-}
+}  // loop()

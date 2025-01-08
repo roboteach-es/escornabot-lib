@@ -34,10 +34,10 @@ void loop() {
 
 ## Installation
 
-1.  Download and install the [Arduino IDE 1.6 (or newer)](https://www.arduino.cc/en/Main/Software)
+1.  Download and install the [Arduino IDE 1.6 (or newer)](https://www.arduino.cc/en/software)
 2.  Open the `Library Manager` from the menu `Tools → Manage Libraries...`
 3.  Search the `Escornabot-lib` library using the input field
-4.  Select the last version (from the dropdown combobox) and click `Install`
+4.  Select the one from **ROBOteach**, pick the last version from the dropdown combobox and click `Install`
 
 You can try now some of the examples from the menu `File → Examples → Escornabot-lib`.
 
@@ -49,13 +49,13 @@ You can try now some of the examples from the menu `File → Examples → Escorn
 
 From a functional perspective, it is a device composed of:
 
-* an **Arduino**, typically a Nano (the *brains*)
-* two 28BYJ-48 5V **stepper motor**s with its driver[s] (the *movement*)
-* a 5V **passive buzzer** (the *sound*)
-* a **LED**, or LEDs, or a NeoPixel now (the *light*)
-* a 5 keys **analog keypad** (the *input*)
-* an **energy source**, batteries or powerBank (the *power*)
-* a **chasis** with two **wheels**, normally 3D printed (the *shape*)
+* An **Arduino**, typically a Nano (the *brains*)
+* Two 28BYJ-48 5V **stepper motor**s with its driver[s] (the *movement*)
+* A 5V **passive buzzer** (the *sound*)
+* A **LED**, or LEDs, or a **NeoPixel** now (the *light*)
+* A 5 keys **analog keypad** (the *input*)
+* An **energy source**, batteries or powerBank (the *power*)
+* A **chasis** with two **wheels**, normally 3D printed (the *shape*)
 
 arranged in a particular physical configuration that allows it to move and turn in a surface, do sound and light, and accept user input, to perform different tasks (typically used as a **programmable buttoned floor robot**).
 

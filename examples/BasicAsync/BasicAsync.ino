@@ -10,14 +10,14 @@
  */
 
 #include <Escornabot-lib.h>
-Escornabot luci;
+Escornabot luci; // create Escornabot object
 
-void setup() {
-	// banner
-	Serial.begin(9600);
-	Serial.println("Escornalib basic asynchronous test for Luci");
+void setup()
+{
 	// setup luci
-	luci.init();
+	luci.init(); // 9600 baudrate
+	// banner
+	Serial.println("Escornalib basic asynchronous test for Luci");
 	// start-up sequence: beep + Luci color
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	luci.showColor(50, 0, 20); // purple
@@ -25,9 +25,10 @@ void setup() {
 
 	// prepare forward movement
 	luci.prepareAction(EB_CMD_FW, 20.0);
-}
+}  // setup()
 
-void loop() {
+void loop()
+{
 	uint32_t currentTime = millis();
 
 	// attend current movement
@@ -49,4 +50,4 @@ void loop() {
 		// some key was pressed
 		luci.beep(440, 100);
 	}
-}
+}  // loop()

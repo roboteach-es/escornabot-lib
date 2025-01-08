@@ -13,8 +13,7 @@
  */
 
 #include <Escornabot-lib.h>
-
-Escornabot luci; // create our robot object
+Escornabot luci; // create Escornabot object
 
 void setup()
 {

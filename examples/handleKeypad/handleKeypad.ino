@@ -8,18 +8,21 @@
  */
 
 #include <Escornabot-lib.h>
-Escornabot luci;
+Escornabot luci; // create Escornabot object
 
-
-void setup() {
-	Serial.begin(9600);
+void setup()
+{
+	// setup luci
+	luci.init(); // 9600 baudrate
+	// banner
 	Serial.println("handleKeypad test for Luci");
-	luci.init();
+	// start-up sequence: beep + Luci color
 	luci.beep(EB_BEEP_DEFAULT, 100);
 	luci.showColor(50, 0, 20); // purple
-}
+}  // setup()
 
-void loop() {	
+void loop()
+{
 	uint32_t currentTime = millis(); // get time
 	uint8_t code = luci.handleKeypad(currentTime);
 
@@ -48,4 +51,4 @@ void loop() {
 	default:
 		Serial.println("UNKNOWN"); // shouldn't happen!
 	}  // switch()
-}
+}  // loop()
