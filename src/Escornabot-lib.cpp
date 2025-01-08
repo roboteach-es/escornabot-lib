@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro einsua
- * @date      20250101
- * @version   1.1.0
+ * @date      20250108
+ * @version   1.1.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -64,11 +64,13 @@ void Escornabot::init()
 	_initNeoPixel(NEOPIXEL_PIN);
 	// Serial / Bluetooth
 	Serial.begin(EB_BAUDRATE);
+	Serial.print("Escornabot-lib v");
+	Serial.println(EB_VERSION);
 	// Keypad autoconfig: give a chance
 	autoConfigKeypad();
 	// Keypad with EEPROM values or default
 	uint16_t *eeprom_index = EB_KP_EEPROM_VALUES_INDEX;
-	uint16_t eeprom_values[5];
+	int16_t eeprom_values[5];
 	for (uint8_t i = 0; i < 5; i ++)
 	{
 		eeprom_values[i] = eeprom_read_word(eeprom_index);
@@ -491,7 +493,7 @@ void Escornabot::autoConfigKeypad()
 /**
  * Updates the keypad configuration values: analog input pin and
  * analog reading values for every key. If the key values are invalid
- * (0X00 or 0XFFFF), the default Config.h values are used.
+ * (0x00 or 0xFFFF), the default Config.h values are used.
  *
  * @param KeypadPin  the analog pin to which the keypad is connected
  * @param Key_NN  analog value when no key is pressed
@@ -512,17 +514,17 @@ void Escornabot::configKeypad(
 {
 	_keypad_pin = KeypadPin;
 	pinMode(_keypad_pin, INPUT_PULLUP); // 2-wires, works if it's externally pulled-up too
-	if (Key_NN == 0x00 || Key_NN == 0xFFFF) _keypad_values[0] = EB_KP_KEY_NN;  // default Config.h
+	if (Key_NN == 0x00 || Key_NN == 0xFFFF) _keypad_values[0] = EB_KP_VALUE_NN;  // default Config.h
 	else _keypad_values[0] = Key_NN;
-	if (Key_FW == 0x00 || Key_FW == 0xFFFF) _keypad_values[1] = EB_KP_KEY_FW;  // default Config.h
+	if (Key_FW == 0x00 || Key_FW == 0xFFFF) _keypad_values[1] = EB_KP_VALUE_FW;  // default Config.h
 	else _keypad_values[1] = Key_FW;
-	if (Key_TL == 0x00 || Key_TL == 0xFFFF) _keypad_values[2] = EB_KP_KEY_TL;  // default Config.h
+	if (Key_TL == 0x00 || Key_TL == 0xFFFF) _keypad_values[2] = EB_KP_VALUE_TL;  // default Config.h
 	else _keypad_values[2] = Key_TL;
-	if (Key_GO == 0x00 || Key_GO == 0xFFFF) _keypad_values[3] = EB_KP_KEY_GO;  // default Config.h
+	if (Key_GO == 0x00 || Key_GO == 0xFFFF) _keypad_values[3] = EB_KP_VALUE_GO;  // default Config.h
 	else _keypad_values[3] = Key_GO;
-	if (Key_TR == 0x00 || Key_TR == 0xFFFF) _keypad_values[4] = EB_KP_KEY_TR;  // default Config.h
+	if (Key_TR == 0x00 || Key_TR == 0xFFFF) _keypad_values[4] = EB_KP_VALUE_TR;  // default Config.h
 	else _keypad_values[4] = Key_TR;
-	if (Key_BW == 0x00 || Key_BW == 0xFFFF) _keypad_values[5] = EB_KP_KEY_BW;  // default Config.h
+	if (Key_BW == 0x00 || Key_BW == 0xFFFF) _keypad_values[5] = EB_KP_VALUE_BW;  // default Config.h
 	else _keypad_values[5] = Key_BW;
 }  // configKeypad()
 
@@ -679,6 +681,17 @@ int16_t Escornabot::rawKeypad()
 {
 	return analogRead(_keypad_pin);
 }  // rawKeypad()
+
+/**
+ * Returns the current keypad keys values in use.
+ *
+ * @return Array with the keypad keys values: NN, FW, TL, GO, TR, BW.
+ */
+int16_t* Escornabot::getKeypadValues()
+{
+	return _keypad_values;
+}  // getKeypadValues()
+
 
 
 

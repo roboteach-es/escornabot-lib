@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro einsua
- * @date      20250101
- * @version   1.1.0
+ * @date      20250108
+ * @version   1.1.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "1.1.0"
+#define EB_VERSION "1.1.1"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -202,6 +202,7 @@ public:
 	void clearKeypad(uint32_t currentTime);
 	bool isButtonPressed(String button);
 	int16_t rawKeypad();
+	int16_t* getKeypadValues();
 
 	// Serial / Blueetooth
 	uint8_t handleSerial();

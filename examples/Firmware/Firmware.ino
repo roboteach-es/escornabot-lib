@@ -5,14 +5,16 @@
  * the same functionalities as the current Escornabot's firmware but
  * with less complexity and overengineering.
  *
+ * Additional info at roboteach.es/escornabot (spanish/galician)
+ *
  * @file      Firmware.ino
  * @author    mgesteiro einsua
- * @date      20250101
- * @version   1.1.0
+ * @date      20250108
+ * @version   1.1.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "1.1.0"
+#define FIRMWARE_VERSION "1.1.1"
 //#define DEBUG_MODE
 
 #include <Arduino.h>
@@ -62,14 +64,22 @@ uint32_t currentTime;
 
 void setup()
 {
-	// banner
-	Serial.begin(EB_BAUDRATE); // 9600 by default
-	Serial.print("Luci's FIRMWARE (v");
-	Serial.print(FIRMWARE_VERSION);
-	Serial.println(")");
-	Serial.flush();
 	// setup and start luci
 	luci.init();
+	// banner
+	Serial.print("Luci's FIRMWARE v");
+	Serial.println(FIRMWARE_VERSION);
+	// show keypad values
+	int16_t* kv = luci.getKeypadValues();
+	Serial.println("Keypad current values:");
+	Serial.print("      NONE ");  Serial.println(kv[0]);
+	Serial.print("   FORWARD ");  Serial.println(kv[1]);
+	Serial.print(" TURN LEFT ");  Serial.println(kv[2]);
+	Serial.print("        GO ");  Serial.println(kv[3]);
+	Serial.print("TURN RIGHT ");  Serial.println(kv[4]);
+	Serial.print("  BACKWARD ");  Serial.println(kv[5]);
+	Serial.flush();
+	// do initial show
 	startUpShow();
 	// purge serial queue
 	while (Serial.read() != -1);
