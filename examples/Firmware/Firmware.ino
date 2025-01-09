@@ -9,12 +9,12 @@
  *
  * @file      Firmware.ino
  * @author    mgesteiro einsua
- * @date      20250108
- * @version   1.1.1
+ * @date      20250109
+ * @version   1.2.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "1.1.1"
+#define FIRMWARE_VERSION "1.2.0"
 //#define DEBUG_MODE
 
 #include <Arduino.h>
@@ -45,10 +45,15 @@ const float LUCI_DIAGONAL_DISTANCE  = sqrt(2 * square(LUCI_MOVE_DISTANCE)); // P
 #define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
 #define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
 #define RTTTL_PRESET  ":d=8,o=4,b=320:d#6,e6,f#6,d#6,"  // Program RESET
+#define RTTTL_MODECHG ":d=8,o=4,b=320:d#7,e7,f#7,d#7,"  // Mode change
 
 #define PROGRAMMING 0
 #define EXECUTING   1
 uint8_t status = PROGRAMMING;
+
+#define STANDARD  1
+#define DONTRESET 2
+uint8_t mode = STANDARD;
 
 EB_T_COMMANDS program[128];  // list of actions saved
 uint8_t program_count = 0;   // number of commands in the program
@@ -186,7 +191,7 @@ void showCmdColor(EB_T_COMMANDS cmd)
  */
 void addCommand(EB_T_COMMANDS command)
 {
-	if (program_count >= 128)
+	if (program_count >= sizeof(program))
 	{
 		status = EXECUTING; // GO!
 		return;
@@ -212,8 +217,9 @@ void stop(uint32_t currentTime)
 	luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_SHORT);
 	if (num_alt_turns % 2 == 0) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
 	else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
-	program_count = 0;  // reset program
-	program_index = 0;  // and index
+	if (mode == STANDARD)
+		program_count = 0;  // reset program
+	program_index = 0;  // reset execution pointer
 	status = PROGRAMMING;  // back to user input
 
 	#ifdef DEBUG_MODE
@@ -291,21 +297,35 @@ void processKeyStroke(uint8_t kp_code)
 			if
 			(
 				(program_count < 1)  // no program
-				&& !(num_alt_turns % 2)  // diagonal angle
+				&& !(num_alt_turns % 2)  // in diagonal angle
 			) break;
 			// program reset!!
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_FORWARD, BEEP_DURATION_LONG);
-			delay(400);
+			delay(BEEP_DURATION_LONG + 100);
 			luci.playRTTTL(RTTTL_PRESET);
 			program_count = 0;  // reset program
-			program_index = 0;  // and index
+			program_index = 0;  // reset execution pointer
 			num_alt_turns = 0;  // and alternate turns!
 			break;
 		case EB_KP_KEY_TL:
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_TURNLEFT, BEEP_DURATION_LONG);
 			addCommand(EB_CMD_TL_ALT);
+			break;
+		case EB_KP_KEY_GO:
+			luci.showKeyColor(key);
+			luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_LONG);
+			delay(BEEP_DURATION_LONG + 100);
+			luci.playRTTTL(RTTTL_MODECHG);
+			if (mode == STANDARD) mode = DONTRESET;
+			else mode = STANDARD;
+			// notify which mode is selected via the number of beeps
+			for (uint8_t i = 0; i < mode; i ++)
+			{
+				delay(BEEP_DURATION_SHORT + 100);
+				luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_SHORT);
+			}
 			break;
 		case EB_KP_KEY_TR:
 			luci.showKeyColor(key);
@@ -406,8 +426,9 @@ void processProgram()
 			luci.playRTTTL(RTTTL_FINISH);
 			if (num_alt_turns % 2 == 0) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
 			else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
-			program_count = 0;  // reset program
-			program_index = 0;  // and index
+			if (mode == STANDARD)
+				program_count = 0;  // reset program
+			program_index = 0;  // reset execution pointer
 			status = PROGRAMMING;  // back to user input
 
 			#ifdef DEBUG_MODE

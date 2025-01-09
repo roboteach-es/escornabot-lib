@@ -1,7 +1,7 @@
 # Escornabot-lib
 An **Escornabot Arduino library** created for [Luci](https://github.com/roboteach-es/escornabot-luci).
 
-This library contains all the core functions and data required to program an [Escornabot ROBOT](https://roboteach.es/escornabot). One of the programs is the [**standard firmware**](examples/Firmware/) for the robot itself.
+This library contains all the core functions and data required to program an [Escornabot ROBOT](https://roboteach.es/escornabot). One of the programs is the fully fledged [**standard firmware**](examples/Firmware/) for the robot itself.
 
 ![Escornabot-REOS](images/Escornabot-OSER.svg)
 
@@ -9,13 +9,13 @@ This library contains all the core functions and data required to program an [Es
 
 ```cpp
 #include <Escornabot-lib.h>
-Escornabot luci;
+Escornabot luci;  // create the Escornabot object
 
 
-void setup(){
-	luci.init();
+void setup() {
+	luci.init();  // initialization
 	luci.beep(EB_BEEP_DEFAULT, 100);
-	luci.showColor(20, 0, 50); // purple
+	luci.showColor(20, 0, 50);  // purple
 	delay(1000);
 }
 
