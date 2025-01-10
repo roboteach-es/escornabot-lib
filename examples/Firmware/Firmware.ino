@@ -1,6 +1,6 @@
 /**
  * Luci's FIRMWARE.
- * 
+ *
  * This is a preliminary version of Luci's firmware, with almost all
  * the same functionalities as the current Escornabot's firmware but
  * with less complexity and overengineering.
@@ -44,8 +44,8 @@ const float LUCI_DIAGONAL_DISTANCE  = sqrt(2 * square(LUCI_MOVE_DISTANCE)); // P
 #define BEEP_DURATION_LONG  200  // ms
 #define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
 #define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
-#define RTTTL_PRESET  ":d=8,o=4,b=320:d#6,e6,f#6,d#6,"  // Program RESET
-#define RTTTL_MODECHG ":d=8,o=4,b=320:d#7,e7,f#7,d#7,"  // Mode change
+#define RTTTL_PRESET  ":d=8,o=4,b=320:d#7,e7,f#7,d#7,"  // Program RESET
+#define RTTTL_MODECHG ":d=8,o=4,b=320:d#6,e6,f#6,d#6,"  // Mode change
 
 #define PROGRAMMING 0
 #define EXECUTING   1
@@ -58,7 +58,7 @@ uint8_t mode = STANDARD;
 EB_T_COMMANDS program[128];  // list of actions saved
 uint8_t program_count = 0;   // number of commands in the program
 uint8_t program_index = 0;   // current command
-uint8_t num_alt_turns = 0;   // number of alternative turns, for diagonal moves
+bool    is_diagonal = false; // indicates whether the next move is a diagonal
 
 Escornabot luci;
 uint32_t currentTime;
@@ -153,7 +153,7 @@ void startUpShow()
 
 /**
  * Show command color
- * 
+ *
  * @param cmd  Command from which to show the associated color.
  */
 void showCmdColor(EB_T_COMMANDS cmd)
@@ -215,7 +215,7 @@ void stop(uint32_t currentTime)
 	luci.disableStepperMotors();
 	luci.clearKeypad(currentTime);
 	luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_SHORT);
-	if (num_alt_turns % 2 == 0) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
+	if (! is_diagonal) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
 	else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
 	if (mode == STANDARD)
 		program_count = 0;  // reset program
@@ -231,7 +231,7 @@ void stop(uint32_t currentTime)
 
 /**
  * Takes care of the keypad and what to do when some key is used.
- * 
+ *
  * This function is responsible for the "PROGRAMMING" state when user input is
  * being attended and knows what to do with that input (like adding commands to
  * the list, launching the execution, etc.)
@@ -285,7 +285,7 @@ void processKeyStroke(uint8_t kp_code)
 		}
 		// go back to "input color" after a moment
 		delay(BEEP_DURATION_SHORT + 50);
-		if (num_alt_turns % 2 == 0) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
+		if (! is_diagonal) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
 		else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
 	}
 	// LONG key presses
@@ -294,19 +294,21 @@ void processKeyStroke(uint8_t kp_code)
 		switch (key)
 		{
 		case EB_KP_KEY_FW:
+			// RESET action
+			// check if there is something to reset
 			if
 			(
-				(program_count < 1)  // no program
-				&& !(num_alt_turns % 2)  // in diagonal angle
-			) break;
+				(program_count < 1) // no program
+				&& (! is_diagonal)  // no diagonal angle
+			) break; // nothing to do here
 			// program reset!!
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_FORWARD, BEEP_DURATION_LONG);
 			delay(BEEP_DURATION_LONG + 100);
 			luci.playRTTTL(RTTTL_PRESET);
-			program_count = 0;  // reset program
-			program_index = 0;  // reset execution pointer
-			num_alt_turns = 0;  // and alternate turns!
+			program_count = 0;   // reset program
+			program_index = 0;   // reset execution pointer
+			is_diagonal = false; // reset diagonal status
 			break;
 		case EB_KP_KEY_TL:
 			luci.showKeyColor(key);
@@ -342,7 +344,7 @@ void processKeyStroke(uint8_t kp_code)
 		}
 		// go back to "input color" after a moment
 		delay(BEEP_DURATION_LONG + 50);
-		if (num_alt_turns % 2 == 0) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
+		if (! is_diagonal) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
 		else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
 	}
 }  // processKeyStroke()
@@ -350,7 +352,7 @@ void processKeyStroke(uint8_t kp_code)
 
 /**
  * Takes care of the program execution.
- * 
+ *
  * This function is responsible for the "EXECUTING" state when the program/list
  * of commands is being processed. It takes care of both, actions execution
  * themselves, and program/commands processing (reading and interpreting commands).
@@ -379,7 +381,7 @@ void processProgram()
 			case EB_CMD_FW:
 				showCmdColor(program[program_index]);
 				luci.beep(EB_BEEP_FORWARD, BEEP_DURATION_SHORT);
-				if (num_alt_turns % 2 == 0) luci.prepareAction(EB_CMD_FW, LUCI_MOVE_DISTANCE);
+				if (! is_diagonal) luci.prepareAction(EB_CMD_FW, LUCI_MOVE_DISTANCE);
 				else luci.prepareAction(EB_CMD_FW, LUCI_DIAGONAL_DISTANCE);
 				break;
 			case EB_CMD_TL:
@@ -395,7 +397,7 @@ void processProgram()
 			case EB_CMD_BW:
 				showCmdColor(program[program_index]);
 				luci.beep(EB_BEEP_BACKWARD, BEEP_DURATION_SHORT);
-				if (num_alt_turns % 2 == 0) luci.prepareAction(EB_CMD_BW, LUCI_MOVE_DISTANCE);
+				if (! is_diagonal) luci.prepareAction(EB_CMD_BW, LUCI_MOVE_DISTANCE);
 				else luci.prepareAction(EB_CMD_BW, LUCI_DIAGONAL_DISTANCE);
 				break;
 			case EB_CMD_PA:
@@ -408,28 +410,30 @@ void processProgram()
 				// Note = C#7, between C (TL) & D (FW)
 				luci.playTone(2217, BEEP_DURATION_SHORT, false);
 				luci.prepareAction(EB_CMD_TL_ALT, LUCI_ROTATE_DEGREES_ALT); // half degrees
-				num_alt_turns ++;
+				is_diagonal = ! is_diagonal;
 				break;
 			case EB_CMD_TR_ALT:
 				showCmdColor(program[program_index]);
 				// Note = D#7, between D (FW) & E (TR)
 				luci.playTone(2489, BEEP_DURATION_SHORT, false);
 				luci.prepareAction(EB_CMD_TR_ALT, LUCI_ROTATE_DEGREES_ALT); // half degrees
-				num_alt_turns ++;
+				is_diagonal = ! is_diagonal;
 				break;
 			}
 		}
 		else
 		{
 			// execution finished
+			if (mode == STANDARD)
+				program_count = 0;   // reset program
+			else
+				is_diagonal = false; // reset diagonal status
+			program_index = 0;       // reset execution pointer
 			luci.disableStepperMotors();
 			luci.playRTTTL(RTTTL_FINISH);
-			if (num_alt_turns % 2 == 0) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
+			if (! is_diagonal) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
 			else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
-			if (mode == STANDARD)
-				program_count = 0;  // reset program
-			program_index = 0;  // reset execution pointer
-			status = PROGRAMMING;  // back to user input
+			status = PROGRAMMING; // back to user input
 
 			#ifdef DEBUG_MODE
 			Serial.println("FINISHED");
