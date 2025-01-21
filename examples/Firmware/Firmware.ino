@@ -9,12 +9,12 @@
  *
  * @file      Firmware.ino
  * @author    mgesteiro einsua
- * @date      20250109
- * @version   1.2.0
+ * @date      20250121
+ * @version   1.2.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "1.2.0"
+#define FIRMWARE_VERSION "1.2.1"
 //#define DEBUG_MODE
 
 #include <Arduino.h>
@@ -92,6 +92,10 @@ void setup()
 	#if STEPPERMOTOR_FIXED_REVERSED
 	luci.fixReversed();
 	#endif
+	// uncomment one of the following line to disable different timeouts
+	//luci.setStandbyTimeouts(0, INACTIVITY_TIMEOUT); // disable powerbank timeout
+	//luci.setStandbyTimeouts(POWERBANK_TIMEOUT, 0);  // disable inactivity timeout
+	//luci.setStandbyTimeouts(0, 0); // disable both timeouts
 }  // setup()
 
 void loop()

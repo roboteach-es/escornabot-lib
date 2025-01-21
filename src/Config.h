@@ -7,8 +7,8 @@
  *
  * @file      Config.h
  * @author    mgesteiro einsua
- * @date      20250101
- * @version   1.1.0
+ * @date      20250121
+ * @version   1.2.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -49,3 +49,7 @@
 // NeoPixel
 #define NEOPIXEL_PIN 12
 #define BRIGHTNESS_LEVEL 50  // range 10-255
+
+// Stand-by
+#define POWERBANK_TIMEOUT 2000    // max time without any high current demand to the powerbank
+#define INACTIVITY_TIMEOUT 30000  // max time without any Escornabot activity before "Still ON!" alert

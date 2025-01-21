@@ -1,14 +1,14 @@
 /**
  * Escornabot-lib is a library for the Escornabot ROBOT.
- * 
+ *
  * A library with all the core functions and data to program an Escornabot
  * ROBOT. More info about the project at roboteach.es/escornabot and
  * escornabot.org.
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro einsua
- * @date      20250108
- * @version   1.1.1
+ * @date      20250121
+ * @version   1.2.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -102,7 +102,7 @@ void Escornabot::init()
  *
  * @param cms  number of centimenters to move. If positive, the robot
  *             moves forward, if negative, backward.
- * 
+ *
  * @note This method is blocking: it only returns after finishing the move.
  */
 void Escornabot::move(float cms)
@@ -163,7 +163,7 @@ void Escornabot::_initCoilsPins()
 
 /**
  * Sets the stepper motor coils.
- * 
+ *
  * This function uses low level PORTx access to set all the coils at the same
  * time and to be fast. That's also why the stepper motor pins are fixed now
  * and not configurable anymore.
@@ -331,7 +331,7 @@ void Escornabot::playRTTTL(const char* tune)
 
 /**
  * Turns on or off the Escornabot LED.
- * 
+ *
  * @param state  Should be HIGH (on) or LOW (off)
  */
 void Escornabot::turnLED(uint8_t state)
@@ -341,7 +341,7 @@ void Escornabot::turnLED(uint8_t state)
 
 /**
  * Blinks the Escornabot LED a number o times.
- * 
+ *
  * @param times  Number of times to blink.
  */
 void Escornabot::blinkLED(uint8_t times)
@@ -366,7 +366,7 @@ void Escornabot::blinkLED(uint8_t times)
 
 /**
  * Shows the provided color in the Escornabot NeoPixel.
- * 
+ *
  * @param R  (0-255) Ammount of red
  * @param G  (0-255) Ammount of green
  * @param B  (0-255) Ammount of blue
@@ -379,7 +379,7 @@ void Escornabot::showColor(uint8_t R, uint8_t G, uint8_t B)
 
 /**
  * Shows the color associated with the selected key in the Escornabot NeoPixel.
- * 
+ *
  * @param key  Which key color to be shown.
  */
 void Escornabot::showKeyColor(EB_T_KP_KEYS key)
@@ -530,7 +530,7 @@ void Escornabot::configKeypad(
 
 /**
  * Scans the keypad port and return the current active key.
- * 
+ *
  * This is a low level raw function: no logic is performed.
  *
  * @return the current active (closed) key. It may be none [0].
@@ -554,7 +554,7 @@ EB_T_KP_KEYS Escornabot::getPressedKey()
 			result = i;
 		}
 	}
-	if (result) _standby_previousTime = millis(); // avoid standby
+	if (result) _inactivity_previousTime = millis(); // avoid standby alert
 	return result;
 }  // getPressedKey()
 
@@ -563,7 +563,7 @@ EB_T_KP_KEYS Escornabot::getPressedKey()
  * It also performs key press/release debouncing. It has an autolimited
  * resolution of EB_KP_CHECK_MIN_INTERVAL milliseconds (5 by default), that can
  * be changed in the Config.h file.
- * 
+ *
  * This is a high level management function, valid for logic control.
  * This function should be called in the loop() as often as possible.
  *
@@ -646,7 +646,7 @@ uint8_t Escornabot::handleKeypad(uint32_t currentTime)
 
 /**
  * Clear all internal states of the keypad management process.
- * 
+ *
  * @param currentTime  Current time in milliseconds (should be provided).
  */
 void Escornabot::clearKeypad(uint32_t currentTime)
@@ -659,9 +659,9 @@ void Escornabot::clearKeypad(uint32_t currentTime)
 
 /**
  * Checks if the named button is being pressed.
- * 
+ *
  * Helper function for mBlock3 extension.
- * 
+ *
  * @param label  Name of the button to check.
  * @return true if the button is active, false otherwise.
  */
@@ -674,7 +674,7 @@ bool Escornabot::isButtonPressed(String label)
 
 /**
  * Lowest level reading function of the keypad input pin.
- * 
+ *
  * @return Analog reading output of the keypad pin.
  */
 int16_t Escornabot::rawKeypad()
@@ -857,7 +857,7 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 	// acceleration <-- update _exec_wait
 	if (_exec_steps > _exec_ap) _exec_wait -= 2; // acceleration
 	if (_exec_steps < _exec_dp) _exec_wait += 3; // deceleration
-	
+
 	// what command?
 	switch (command)
 	{
@@ -893,7 +893,7 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 	// update counters and timers
 	_exec_steps --;
 	_exec_ptime = cTime;
-	_standby_previousTime = currentTime; // avoid standby alert
+	_inactivity_previousTime = currentTime; // avoid standby alert
 
 	// next command?
 	if (_exec_steps > 0) return 1;  // still pending steps
@@ -904,7 +904,7 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
  * Stop current Action (if any) execution.
  *
  * @param currentTime  Current time in milliseconds (should be provided).
- *  
+ *
  */
 void Escornabot::stopAction(uint32_t currentTime)
 {
@@ -916,13 +916,75 @@ void Escornabot::stopAction(uint32_t currentTime)
 
 ////////////////////////////////////////
 //
+// Stand-by
+//
+////////////////////////////////////////
+
+/**
+ * This function takes care of the idle state of the Escornabot.
+ * At this moment: avoid powerBank shutdown and alert of inactivity.
+ *
+ * @param currentTime  Current time in milliseconds (should be provided).
+ */
+void Escornabot::handleStandby(uint32_t currentTime)
+{
+	// avoid powerbank shutdown
+	if (_powerbank_timeout)  // if timeout enabled
+	{
+		if (_powerbank_previousTime == 0) // start-up only
+		{
+			// energize one coil for 550 ms
+			_setCoils(B000, B0001);
+			delay(550);
+			_setCoils(B0000, B0000);
+			_powerbank_previousTime = currentTime;
+		}
+		if (currentTime - _powerbank_previousTime > _powerbank_timeout) // recurrent
+		{
+			// energize one coil for 5 ms
+			_setCoils(B0000, B0001);
+			delay(5);
+			_setCoils(B0000, B0000);
+			_powerbank_previousTime = currentTime;
+		}
+	}
+
+	// alert: "still ON" if enough inactivity
+	if (_inactivity_timeout)  // if timeout enabled
+	if (currentTime - _inactivity_previousTime > _inactivity_timeout)
+	{
+		beep(EB_BEEP_DEFAULT, 25);
+		delay(50);
+		beep(EB_BEEP_DEFAULT, 25);
+		_inactivity_previousTime = currentTime;
+	}
+}  // handleStandby()
+
+/**
+ * Set the different timeouts to handle the idle state of the Escornabot.
+ *
+ * @param powerbank  Max time before pulling some current from the powerbak to avoid its shutdown (ms).
+ *                   0 disables this timeout.
+ * @param inactivity  Max time of user inactivity before sounding a "still-ON" alert.
+ *                    0 disables this timeout.
+ */
+void Escornabot::setStandbyTimeouts(uint32_t powerbank, uint32_t inactivity)
+{
+	_powerbank_timeout  = powerbank;
+	_inactivity_timeout = inactivity;
+}  //setStandbyTimeouts()
+
+
+
+////////////////////////////////////////
+//
 // Extra
 //
 ////////////////////////////////////////
 
 /**
  * Activates internal flag to reverse the stepper motor rotation.
- * 
+ *
  * This is an "easy fix" to deal with stepper motors that have swapped
  * wires and instead of blue-pink-yellow-orange come with pink-blue-orange-yellow.
  */
@@ -930,42 +992,6 @@ void Escornabot::fixReversed()
 {
 	_isReversed = true;
 }  // fixReversed()
-
-/**
- * This function takes care of the idle state of the Escornabot.
- * At this moment: avoid powerBank shutdown and alerts of inactivity.
- * 
- * @param currentTime  Current time in milliseconds (should be provided).
- */
-void Escornabot::handleStandby(uint32_t currentTime)
-{
-	// avoid powerbank shutdown
-	if (_powerbank_previousTime == 0) // first time only
-	{
-		// energize powerbank
-		_setCoils(B000, B0001);
-		delay(550);
-		_setCoils(B0000, B0000);
-		_powerbank_previousTime = currentTime;
-	}
-	if (currentTime - _powerbank_previousTime > 4000) // recurrent
-	{
-		// energize one coil for 5 ms
-		_setCoils(B0000, B0001);
-		delay(5);
-		_setCoils(B0000, B0000);
-		_powerbank_previousTime = currentTime;
-	}
-
-	// alert: "still ON" every 30 s of inactivity
-	if (currentTime - _standby_previousTime > 30000)
-	{
-		beep(EB_BEEP_DEFAULT, 25);
-		delay(50);
-		beep(EB_BEEP_DEFAULT, 25);
-		_standby_previousTime = currentTime;
-	}
-}  // handleStandby()
 
 
 

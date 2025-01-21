@@ -1,21 +1,21 @@
 /**
  * Escornabot-lib is a library for the Escornabot ROBOT.
- * 
+ *
  * A library with all the core functions and data to program an Escornabot
  * ROBOT. More info about the project at roboteach.es/escornabot and
  * escornabot.org.
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro einsua
- * @date      20250108
- * @version   1.1.1
+ * @date      20250121
+ * @version   1.2.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "1.1.1"
+#define EB_VERSION "1.2.0"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -212,9 +212,12 @@ public:
 	uint8_t handleAction(uint32_t currentTime, EB_T_COMMANDS command);
 	void stopAction(uint32_t currentTime);
 
+	// Stand-by
+	void handleStandby(uint32_t currentTime);
+	void setStandbyTimeouts(uint32_t powerbank, uint32_t inactivity);
+
 	// Extra
 	void fixReversed();
-	void handleStandby(uint32_t currentTime);
 	void debug();
 
 private:
@@ -244,10 +247,14 @@ private:
 	uint32_t _exec_drindex; // driving sequence index
 	uint32_t _exec_ptime;   // previous execution time
 
+	// Stand-by
+	uint32_t _powerbank_timeout       = POWERBANK_TIMEOUT;
+	uint32_t _powerbank_previousTime  = 0;
+	uint32_t _inactivity_timeout      = INACTIVITY_TIMEOUT;
+	uint32_t _inactivity_previousTime = 0;
+
 	// Extra
 	bool _isReversed = false;
-	uint32_t _powerbank_previousTime = 0;
-	uint32_t _standby_previousTime = 0;
 
 };
 
