@@ -1,7 +1,7 @@
 # Escornabot-lib
 An **Escornabot Arduino library** created for [Luci](https://github.com/roboteach-es/escornabot-luci).
 
-This library contains all the core functions and data required to program an [Escornabot ROBOT](https://roboteach.es/escornabot). One of the programs is the fully fledged [**standard firmware**](examples/Firmware/) for the robot itself.
+This library contains all the core functions and data required to program an [Escornabot ROBOT](https://roboteach.es/escornabot). One of the programs is the fully fledged [**standard firmware**](examples/Firmware-Luci/) for the robot itself.
 
 ![Escornabot-REOS](images/Escornabot-OSER.svg)
 
@@ -63,7 +63,7 @@ arranged in a particular physical configuration that allows it to move and turn 
 ## Documentation
 This library source code is documented using [Doxygen format](https://www.doxygen.org/manual/commands.html), although no documention has been generated yet.
 
-Meanwhile, in the [`examples`](examples/) folder, besides the [`firmware itself`](examples/Firmware/), there are several programs that may be useful to understand how it works.
+Meanwhile, in the [`examples`](examples/) folder, besides the [`firmware itself`](examples/Firmware-Luci/), there are several programs that may be useful to understand how it works.
 
 
 ## LICENSE
