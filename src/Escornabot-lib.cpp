@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro einsua
- * @date      20250121
- * @version   1.2.0
+ * @date      20250201
+ * @version   1.3.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -149,6 +149,31 @@ void Escornabot::disableStepperMotors()
 {
 	_setCoils(0, 0);
 }  // disableStepperMotors()
+
+/**
+ * Set the number of steps to advance 1 milimeter.
+ *
+ * @param steps number of steps
+ *
+ * @note There are calculation examples in the Config.h file, used as defaults.
+ */
+void Escornabot::setStepsPerMilimiter(float steps)
+{
+	_steppers_steps_mm = steps;
+}  // setStepsPerMilimiter()
+
+/**
+ * Set the number of steps to rotate 1 degree.
+ *
+ * @param steps number of steps
+ *
+ * @note There are calculation examples in the Config.h file, used as defaults.
+ */
+void Escornabot::setStepsPerDegree(float steps)
+{
+	_steppers_steps_deg = steps;
+}  // setStepsPerDegree()
+
 
 /**
  * Initializes the output pins for the stepper motor coils.
@@ -340,17 +365,18 @@ void Escornabot::turnLED(uint8_t state)
 }  // turnLED()
 
 /**
- * Blinks the Escornabot LED a number o times.
+ * Blinks the Escornabot LED (on & off) a number o times.
  *
  * @param times  Number of times to blink.
+ * @param reversed  Starts with off and ends with on.
  */
-void Escornabot::blinkLED(uint8_t times)
+void Escornabot::blinkLED(uint8_t times, bool reversed = false)
 {
 	while (times > 0)
 	{
-		digitalWrite(SIMPLELED_PIN, HIGH);
+		digitalWrite(SIMPLELED_PIN, ! reversed);
 		delay(200);
-		digitalWrite(SIMPLELED_PIN, LOW);
+		digitalWrite(SIMPLELED_PIN, reversed);
 		delay(200);
 		times--;
 	}
@@ -784,29 +810,29 @@ void Escornabot::prepareAction(EB_T_COMMANDS command, float value)
 	switch (command)
 	{
 	case EB_CMD_FW : // FORWARD
-		_exec_steps = value * 10 * STEPPERS_STEPS_MM;  // # steps, implicit trunc()
+		_exec_steps = value * 10 * _steppers_steps_mm;  // # steps, implicit trunc()
 		_exec_drinit = 0;  // initial driving state index
 		_exec_drinc = 1;  // driving index growth direction
 		break;
 	case EB_CMD_BW : // BACKWARD
-		_exec_steps = value * 10 * STEPPERS_STEPS_MM;  // # steps, implicit trunc()
+		_exec_steps = value * 10 * _steppers_steps_mm;  // # steps, implicit trunc()
 		_exec_drinit = EB_SM_DRIVING_SEQUENCE_MAX;  // initial driving state index
 		_exec_drinc = -1;  // driving index growth direction
 		break;
 	case EB_CMD_TL : // TURN LEFT
 	case EB_CMD_TL_ALT : // TURN LEFT ALTERNATE
-		_exec_steps = value * STEPPERS_STEPS_DEG;  // # steps, implicit trunc()
+		_exec_steps = value * _steppers_steps_deg;  // # steps, implicit trunc()
 		_exec_drinit = EB_SM_DRIVING_SEQUENCE_MAX;  // initial driving state index
 		_exec_drinc = -1;  // driving index growth direction
 		break;
 	case EB_CMD_TR : // TURN RIGHT
 	case EB_CMD_TR_ALT : // TURN RIGHT ALTERNATE
-		_exec_steps = value * STEPPERS_STEPS_DEG;  // # steps, implicit trunc()
+		_exec_steps = value * _steppers_steps_deg;  // # steps, implicit trunc()
 		_exec_drinit = 0;  // initial driving state index
 		_exec_drinc = 1;  // driving index growth direction
 		break;
 	case EB_CMD_PA : // PAUSE <-- same time/steps as advance
-		_exec_steps = value * 10 * STEPPERS_STEPS_MM;  // # steps, implicit trunc()
+		_exec_steps = value * 10 * _steppers_steps_mm;  // # steps, implicit trunc()
 		break;
 	default: // should never happen ??
 		_exec_steps = 0;

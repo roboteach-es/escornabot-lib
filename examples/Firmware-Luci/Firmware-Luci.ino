@@ -1,21 +1,23 @@
 /**
  * Luci's FIRMWARE.
  *
- * This is a preliminary version of Luci's firmware, with almost all
- * the same functionalities as the current Escornabot's firmware but
- * with less complexity and overengineering.
+ * This is the default firmware for the Luci species of the Escornabot robot,
+ * more functional, consistent and with less complexity & overengineering.
+ *
+ * Be careful, wiring is different from the original Escornabot as it has now
+ * an RGB pixel (neopixel).
  *
  * Additional info at roboteach.es/escornabot (spanish/galician)
  *
  * @file      Firmware.ino
  * @author    mgesteiro einsua
- * @date      20250121
- * @version   1.2.1
+ * @date      20250201
+ * @version   1.2.2
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "1.2.1"
-//#define DEBUG_MODE
+#define FIRMWARE_VERSION "1.2.2"
+//#define DEBUG_MODE // uncomment this if you want to see debug information (via serial)
 
 #include <Arduino.h>
 #include <Escornabot-lib.h>
@@ -76,13 +78,18 @@ void setup()
 	Serial.println(FIRMWARE_VERSION);
 	// show keypad values
 	int16_t* kv = luci.getKeypadValues();
-	Serial.println("Keypad current values:");
+	Serial.println("\nKeypad current values:");
 	Serial.print("      NONE ");  Serial.println(kv[0]);
 	Serial.print("   FORWARD ");  Serial.println(kv[1]);
 	Serial.print(" TURN LEFT ");  Serial.println(kv[2]);
 	Serial.print("        GO ");  Serial.println(kv[3]);
 	Serial.print("TURN RIGHT ");  Serial.println(kv[4]);
 	Serial.print("  BACKWARD ");  Serial.println(kv[5]);
+	Serial.println("\nGeometry values:");
+	Serial.print("  Wheel diameter   = ");  Serial.println(WHEEL_DIAMETER);
+	Serial.print("  Wheel separation = ");  Serial.println(WHEEL_SEPARATION);
+	Serial.print("  Steps/mm = ");  Serial.println(STEPPERS_STEPS_MM);
+	Serial.print("  Steps/°  = ");  Serial.println(STEPPERS_STEPS_DEG);
 	Serial.flush();
 	// do initial show
 	startUpShow();
@@ -219,11 +226,13 @@ void stop(uint32_t currentTime)
 	luci.disableStepperMotors();
 	luci.clearKeypad(currentTime);
 	luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_SHORT);
-	if (! is_diagonal) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
-	else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
 	if (mode == STANDARD)
 		program_count = 0;  // reset program
+	else
+		is_diagonal = false;  // reset diagonal status
 	program_index = 0;  // reset execution pointer
+	if (! is_diagonal) luci.showColor(LUCI_COLOR_R, LUCI_COLOR_G, LUCI_COLOR_B); // input color, purple
+	else luci.showColor(DIAGONAL_COLOR_R, DIAGONAL_COLOR_G, DIAGONAL_COLOR_B); // diagonal!
 	status = PROGRAMMING;  // back to user input
 
 	#ifdef DEBUG_MODE

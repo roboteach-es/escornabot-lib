@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro einsua
- * @date      20250121
- * @version   1.2.0
+ * @date      20250201
+ * @version   1.3.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "1.2.0"
+#define EB_VERSION "1.3.0"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -28,11 +28,6 @@
 //
 // STEPPER MOTORS                    //
 //
-#define WHEEL_CIRCUMFERENCE float(PI * WHEEL_DIAMETER)
-#define ROTATION_CIRCUMFERENCE float(PI * WHEEL_DISTANCE) // rotation circunference determined by the wheel separation
-#define STEPPERS_STEPS_MM float(STEPPERMOTOR_FULLREVOLUTION_STEPS / WHEEL_CIRCUMFERENCE) // how many steps to move 1 mm
-#define STEPPERS_STEPS_DEG float((ROTATION_CIRCUMFERENCE/360) * STEPPERS_STEPS_MM) // how many steps to rotate the robot 1 degree
-
 const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0011, B0110, B1100, B1001};  // full drive - stronger
 // const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0001, B0010, B0100, B1000};  // wave drive - less consumption
 #define EB_SM_DRIVING_SEQUENCE_MAX sizeof(EB_SM_DRIVING_SEQUENCE) - 1
@@ -173,6 +168,8 @@ public:
 	void move(float cms);
 	void turn(float degrees);
 	void disableStepperMotors();
+	void setStepsPerMilimiter(float steps);
+	void setStepsPerDegree(float steps);
 
 	// Buzzer
 	void beep(EB_T_BEEPS beepid, uint16_t duration);
@@ -181,7 +178,7 @@ public:
 
 	// LED
 	void turnLED(uint8_t state);
-	void blinkLED(uint8_t times);
+	void blinkLED(uint8_t times, bool reversed = false);
 
 	// NeoPixel
 	void showColor(uint8_t R, uint8_t G, uint8_t B);
@@ -224,6 +221,8 @@ private:
 	// Stepper motors
 	void _initCoilsPins();
 	void _setCoils(uint8_t stateR, uint8_t stateL);
+	float _steppers_steps_mm = STEPPERS_STEPS_MM;   // default from Config.h
+	float _steppers_steps_deg = STEPPERS_STEPS_DEG; // default from Config.h
 
 	// Neopixel
 	NeoPixel *_neopixel;
