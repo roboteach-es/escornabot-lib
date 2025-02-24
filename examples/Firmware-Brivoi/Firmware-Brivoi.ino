@@ -6,10 +6,10 @@
  *
  * Be careful, it uses the same connection schema than Luci and only changes
  * the following:
- *   1. Use of the on-board LED instead of the RGB-LED (Brivoi hasn't one!)
- *   2. Geometry is slightly different from the default (Luci)
+ *   1. Use of the on-board LED instead of the RGB-LED (Brivoi hasn't one!).
+ *   2. Geometry is slightly different from the default (Luci).
  *
- * Additional info at roboteach.es/escornabot (spanish/galician)
+ * Additional info and guides at roboteach.es/escornabot (spanish/galician).
  *
  * @file      Firmware-Brivoi.ino
  * @author    mgesteiro einsua
@@ -19,27 +19,25 @@
  */
 
 #define FIRMWARE_VERSION "1.2.2"
+// change this to false if your stepper motors work backwards.
+#define STEPPERMOTOR_FIXED_REVERSED true
 //#define DEBUG_MODE // uncomment this if you want to see debug information (via serial)
 
 #include <Arduino.h>
 #include <Escornabot-lib.h>
 
 const float BRIVOI_MOVE_DISTANCE      = 10.0;  // cms
-
 // NOTE: if you change the following values, you should also update the logic in processProgram()
 const float BRIVOI_ROTATE_DEGREES     = 90.0;  // degrees
 const float BRIVOI_ROTATE_DEGREES_ALT = 45.0;  // degrees
 const float BRIVOI_DIAGONAL_DISTANCE  = sqrt(2 * square(BRIVOI_MOVE_DISTANCE)); // Pythagoras, valid for 90/45
 
-// change this if your stepper motors are reverse wired.
-#define STEPPERMOTOR_FIXED_REVERSED false // change to true if your steppers work backwards
-
 #define BEEP_DURATION_SHORT 100  // ms
 #define BEEP_DURATION_LONG  200  // ms
 #define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
 #define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
-#define RTTTL_PRESET  ":d=8,o=4,b=320:d#7,e7,f#7,d#7,"  // Program RESET
-#define RTTTL_MODECHG ":d=8,o=4,b=320:d#6,e6,f#6,d#6,"  // Mode change
+#define RTTTL_PRESET  ":d=16,o=7,b=160:d#,e,f#,d#,"  // Program RESET
+#define RTTTL_MODECHG ":d=16,o=7,b=140:f,p,d,2p,"    // Mode change
 
 #define PROGRAMMING 0
 #define EXECUTING   1
@@ -102,7 +100,7 @@ void setup()
 	brivoi.fixReversed();
 	#endif
 	// uncomment one of the following line to disable different timeouts
-	//brivoi.setStandbyTimeouts(0, INACTIVITY_TIMEOUT); // disable powerbank timeout
+	brivoi.setStandbyTimeouts(0, INACTIVITY_TIMEOUT); // disable powerbank timeout
 	//brivoi.setStandbyTimeouts(POWERBANK_TIMEOUT, 0);  // disable inactivity timeout
 	//brivoi.setStandbyTimeouts(0, 0); // disable both timeouts
 }  // setup()
@@ -147,7 +145,7 @@ void loop()
 void startUpShow()
 {
 	// start-up sequence: flash 5 times + tune
-	brivoi.blinkLED(5);
+	// brivoi.blinkLED(3);
 	brivoi.playRTTTL(RTTTL_STARTUP);
 }  // startUpShow()
 
@@ -356,7 +354,7 @@ void processProgram()
 		return;  // still pending execution -> exit to the next loop
 
 	case EB_CMD_R_FINISHED_ACTION:  // next command
-		program_index ++;  // <- no "break"!!
+		program_index ++;  // <- no "break" necessary
 
 	case EB_CMD_R_NOTHING_TO_DO:
 	default:

@@ -17,20 +17,18 @@
  */
 
 #define FIRMWARE_VERSION "1.2.2"
+// change this to true if your stepper motors work backwards.
+#define STEPPERMOTOR_FIXED_REVERSED false
 //#define DEBUG_MODE // uncomment this if you want to see debug information (via serial)
 
 #include <Arduino.h>
 #include <Escornabot-lib.h>
 
 const float LUCI_MOVE_DISTANCE      = 10.0;  // cms
-
 // NOTE: if you change the following values, you should also update the logic in processProgram()
 const float LUCI_ROTATE_DEGREES     = 90.0;  // degrees
 const float LUCI_ROTATE_DEGREES_ALT = 45.0;  // degrees
 const float LUCI_DIAGONAL_DISTANCE  = sqrt(2 * square(LUCI_MOVE_DISTANCE)); // Pythagoras, valid for 90/45
-
-// change this if your stepper motors are reverse wired.
-#define STEPPERMOTOR_FIXED_REVERSED false // fix stepper motors with swapped cables
 
 // Luci color = Purple (~ darkish magenta)
 #define LUCI_COLOR_R BRIGHTNESS_LEVEL * 0.4
@@ -46,8 +44,8 @@ const float LUCI_DIAGONAL_DISTANCE  = sqrt(2 * square(LUCI_MOVE_DISTANCE)); // P
 #define BEEP_DURATION_LONG  200  // ms
 #define RTTTL_STARTUP ":d=16,o=6,b=140:c,p,e,p,g,"
 #define RTTTL_FINISH  ":d=16,o=6,b=800:f,4p,f,4p,f,4p,f,4p,c,4p,c,4p,c,4p,c,"
-#define RTTTL_PRESET  ":d=8,o=4,b=320:d#7,e7,f#7,d#7,"  // Program RESET
-#define RTTTL_MODECHG ":d=8,o=4,b=320:d#6,e6,f#6,d#6,"  // Mode change
+#define RTTTL_PRESET  ":d=16,o=7,b=160:d#,e,f#,d#,"  // Program RESET
+#define RTTTL_MODECHG ":d=16,o=7,b=140:f,p,d,2p,"    // Mode change
 
 #define PROGRAMMING 0
 #define EXECUTING   1
@@ -192,7 +190,7 @@ void showCmdColor(EB_T_COMMANDS cmd)
 	case EB_CMD_TL_ALT:  // TL alternative
 		luci.showColor(BRIGHTNESS_LEVEL, 0, BRIGHTNESS_LEVEL);  // red + blue = magenta
 		break;
-	case EB_CMD_TR_ALT: // TR alternative
+	case EB_CMD_TR_ALT:  // TR alternative
 		luci.showColor(0, BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL);  // blue + green = cyan
 	}
 }  // showCmdColor()
@@ -379,7 +377,7 @@ void processProgram()
 		return;  // still pending execution -> exit to the next loop
 
 	case EB_CMD_R_FINISHED_ACTION:  // next command
-		program_index ++;  // <- no "break"!!
+		program_index ++;  // <- no "break" necessary
 
 	case EB_CMD_R_NOTHING_TO_DO:
 	default:
