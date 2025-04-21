@@ -5,21 +5,22 @@
  * more functional, consistent and with less complexity & overengineering.
  *
  * Be careful, wiring is different from the original Escornabot as it has now
- * an RGB pixel (neopixel).
+ * an RGB pixel (neopixel) and optimized steppers wiring.
  *
  * Additional info at roboteach.es/escornabot (spanish/galician)
  *
- * @file      Firmware.ino
+ * @file      Firmware-Luci.ino
  * @author    mgesteiro einsua
- * @date      20250201
- * @version   1.2.2
+ * @date      20250420
+ * @version   1.2.3
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "1.2.2"
+#define FIRMWARE_VERSION "1.2.3"
 // change this to true if your stepper motors work backwards.
 #define STEPPERMOTOR_FIXED_REVERSED false
-//#define DEBUG_MODE // uncomment this if you want to see debug information (via serial)
+// uncomment the following line if you want to see debug information (via serial)
+//#define DEBUG_MODE
 
 #include <Arduino.h>
 #include <Escornabot-lib.h>
@@ -72,22 +73,22 @@ void setup()
 	// setup and start luci
 	luci.init();
 	// banner
-	Serial.print("Luci's FIRMWARE v");
-	Serial.println(FIRMWARE_VERSION);
+	Serial.print(F("Luci's FIRMWARE v"));
+	Serial.println(F(FIRMWARE_VERSION));
 	// show keypad values
 	int16_t* kv = luci.getKeypadValues();
-	Serial.println("\nKeypad current values:");
-	Serial.print("      NONE ");  Serial.println(kv[0]);
-	Serial.print("   FORWARD ");  Serial.println(kv[1]);
-	Serial.print(" TURN LEFT ");  Serial.println(kv[2]);
-	Serial.print("        GO ");  Serial.println(kv[3]);
-	Serial.print("TURN RIGHT ");  Serial.println(kv[4]);
-	Serial.print("  BACKWARD ");  Serial.println(kv[5]);
-	Serial.println("\nGeometry values:");
-	Serial.print("  Wheel diameter   = ");  Serial.println(WHEEL_DIAMETER);
-	Serial.print("  Wheel separation = ");  Serial.println(WHEEL_SEPARATION);
-	Serial.print("  Steps/mm = ");  Serial.println(STEPPERS_STEPS_MM);
-	Serial.print("  Steps/°  = ");  Serial.println(STEPPERS_STEPS_DEG);
+	Serial.println(F("\nKeypad current values:"));
+	Serial.print(F("      NONE "));  Serial.println(kv[0]);
+	Serial.print(F("   FORWARD "));  Serial.println(kv[1]);
+	Serial.print(F(" TURN LEFT "));  Serial.println(kv[2]);
+	Serial.print(F("        GO "));  Serial.println(kv[3]);
+	Serial.print(F("TURN RIGHT "));  Serial.println(kv[4]);
+	Serial.print(F("  BACKWARD "));  Serial.println(kv[5]);
+	Serial.println(F("\nGeometry values:"));
+	Serial.print(F("  Wheel diameter   = "));  Serial.println(WHEEL_DIAMETER);
+	Serial.print(F("  Wheel separation = "));  Serial.println(WHEEL_SEPARATION);
+	Serial.print(F("  Steps/mm = "));  Serial.println(STEPPERS_STEPS_MM);
+	Serial.print(F("  Steps/°  = "));  Serial.println(STEPPERS_STEPS_DEG);
 	Serial.flush();
 	// do initial show
 	startUpShow();
@@ -185,7 +186,7 @@ void showCmdColor(EB_T_COMMANDS cmd)
 		luci.showColor(BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL, 0);  // yellow
 		break;
 	case EB_CMD_PA:  // Pause
-		luci.showColor(BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL, 0);  // yellow
+		luci.showColor(BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL, BRIGHTNESS_LEVEL);  // white
 		break;
 	case EB_CMD_TL_ALT:  // TL alternative
 		luci.showColor(BRIGHTNESS_LEVEL, 0, BRIGHTNESS_LEVEL);  // red + blue = magenta
@@ -209,7 +210,7 @@ void addCommand(EB_T_COMMANDS command)
 	program_count ++;
 
 	#ifdef DEBUG_MODE
-	Serial.print("ADDED ");
+	Serial.print(F("ADDED "));
 	Serial.println(EB_CMD_LABELS[command]);
 	#endif
 }  // addCommand()
@@ -234,7 +235,7 @@ void stop(uint32_t currentTime)
 	status = PROGRAMMING;  // back to user input
 
 	#ifdef DEBUG_MODE
-	Serial.println("STOP!");
+	Serial.println(F("STOP!"));
 	#endif
 
 	delay(500); // allow some time for sound and key stroke clearance
@@ -269,14 +270,15 @@ void processKeyStroke(uint8_t kp_code)
 			addCommand(EB_CMD_TL);
 			break;
 		case EB_KP_KEY_GO:
-			if (program_count < 1) break;
-
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_SHORT);
+
+			if (program_count < 1) break;
+
 			status = EXECUTING;
 
 			#ifdef DEBUG_MODE
-			Serial.println("GO!");
+			Serial.println(F("GO!"));
 			#endif
 
 			break;
@@ -305,21 +307,10 @@ void processKeyStroke(uint8_t kp_code)
 		switch (key)
 		{
 		case EB_KP_KEY_FW:
-			// RESET action
-			// check if there is something to reset
-			if
-			(
-				(program_count < 1) // no program
-				&& (! is_diagonal)  // no diagonal angle
-			) break; // nothing to do here
-			// program reset!!
+			// PAUSE action
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_FORWARD, BEEP_DURATION_LONG);
-			delay(BEEP_DURATION_LONG + 100);
-			luci.playRTTTL(RTTTL_PRESET);
-			program_count = 0;   // reset program
-			program_index = 0;   // reset execution pointer
-			is_diagonal = false; // reset diagonal status
+			addCommand(EB_CMD_PA);
 			break;
 		case EB_KP_KEY_TL:
 			luci.showKeyColor(key);
@@ -329,7 +320,7 @@ void processKeyStroke(uint8_t kp_code)
 		case EB_KP_KEY_GO:
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_DEFAULT, BEEP_DURATION_LONG);
-			delay(BEEP_DURATION_LONG + 100);
+			delay(BEEP_DURATION_LONG * 5);
 			luci.playRTTTL(RTTTL_MODECHG);
 			if (mode == STANDARD) mode = DONTRESET;
 			else mode = STANDARD;
@@ -346,9 +337,23 @@ void processKeyStroke(uint8_t kp_code)
 			addCommand(EB_CMD_TR_ALT);
 			break;
 		case EB_KP_KEY_BW:
+			// RESET action
 			luci.showKeyColor(key);
 			luci.beep(EB_BEEP_BACKWARD, BEEP_DURATION_LONG);
-			addCommand(EB_CMD_PA);
+			// check if there is something to reset
+			if
+			(
+				(program_count < 1) // no program
+				&& (! is_diagonal)  // no diagonal angle
+			) break; // nothing to do here
+			// program reset!!
+			delay(BEEP_DURATION_LONG + 50); // necessary to show key color = input feedback
+			luci.showKeyColor(EB_KP_KEY_NN); // RESET = Off
+			delay(BEEP_DURATION_LONG * 5);
+			luci.playRTTTL(RTTTL_PRESET);
+			program_count = 0;   // reset program
+			program_index = 0;   // reset execution pointer
+			is_diagonal = false; // reset diagonal status
 			break;
 		default:
 			return; // unhandled case, avoid any further action
@@ -447,7 +452,7 @@ void processProgram()
 			status = PROGRAMMING; // back to user input
 
 			#ifdef DEBUG_MODE
-			Serial.println("FINISHED");
+			Serial.println(F("FINISHED"));
 			#endif
 		}
 	} // switch

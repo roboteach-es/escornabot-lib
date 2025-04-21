@@ -1,5 +1,5 @@
 # Escornabot-lib
-An **Escornabot Arduino library** created for [Luci](https://github.com/roboteach-es/escornabot-luci).
+An **Escornabot Arduino library** created for [Luci](https://github.com/roboteach-es/escornabot-luci) with support now also for other species.
 
 This library contains all the core functions and data required to program an [Escornabot ROBOT](https://roboteach.es/escornabot). One of the programs is the fully fledged [**standard firmware**](examples/Firmware-Luci/) for the robot itself.
 

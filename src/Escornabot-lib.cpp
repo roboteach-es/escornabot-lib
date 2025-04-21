@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro einsua
- * @date      20250201
- * @version   1.3.0
+ * @date      20250418
+ * @version   1.4.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -52,23 +52,29 @@ Escornabot::~Escornabot()
  * @see an init function is required due to Arduino's architecture and constructors should be avoided:
  *      https://forum.arduino.cc/t/analogread-seems-not-working-into-a-class-constructor/109081/8
  */
-void Escornabot::init()
+void Escornabot::init(
+	uint8_t keypadPin,
+	uint8_t buzzerPin,
+	uint8_t neopixelPin,
+	EB_T_WIRINGTYPES wiringType)
 {
 	// Stepper motors
-	_initCoilsPins();
+	_setSteppersWiring(wiringType);
+	(this->*_initCoilsPins)();
 	// Buzzer
-	pinMode(BUZZER_PIN, OUTPUT);
+	_buzzer_pin = buzzerPin;
+	pinMode(_buzzer_pin, OUTPUT);
 	// On-board LED
 	pinMode(SIMPLELED_PIN, OUTPUT);
 	// NeoPixel
-	_initNeoPixel(NEOPIXEL_PIN);
+	_initNeoPixel(neopixelPin);
 	// Serial / Bluetooth
 	Serial.begin(EB_BAUDRATE);
 	Serial.print("Escornabot-lib v");
 	Serial.println(EB_VERSION);
-	// Keypad autoconfig: give a chance
+	// Keypad autoconfig: give it a chance
 	autoConfigKeypad();
-	// Keypad with EEPROM values or default
+	// Read keypad values from EEPROM (may be invalid)
 	uint16_t *eeprom_index = EB_KP_EEPROM_VALUES_INDEX;
 	int16_t eeprom_values[5];
 	for (uint8_t i = 0; i < 5; i ++)
@@ -76,8 +82,9 @@ void Escornabot::init()
 		eeprom_values[i] = eeprom_read_word(eeprom_index);
 		eeprom_index++;
 	}
+	// Configure keypad with EEPROM values or default (from config.h) if invalid
 	configKeypad(
-		KEYPAD_PIN,
+		keypadPin,
 		EB_KP_VALUE_NN,
 		eeprom_values[0], // FW
 		eeprom_values[1], // TL
@@ -147,7 +154,7 @@ void Escornabot::turn(float degrees)
  */
 void Escornabot::disableStepperMotors()
 {
-	_setCoils(0, 0);
+	(this->*_setCoils)(0, 0);
 }  // disableStepperMotors()
 
 /**
@@ -175,16 +182,20 @@ void Escornabot::setStepsPerDegree(float steps)
 }  // setStepsPerDegree()
 
 
+
+//
+// Luci version
+//
 /**
  * Initializes the output pins for the stepper motor coils.
  */
-void Escornabot::_initCoilsPins()
+void Escornabot::_initCoilsPins_Luci()
 {
 	// PORTB maps to Arduino digital pins 8 to 13. The two high bits (6 & 7) map to the crystal pins and are not usable.
 	DDRB = DDRB | B00001111;  // pins x,x,x,x,11,10,9,8 as OUTPUT - Right motor
 	// PORTD maps to Arduino digital pins 0 to 7. Pins 0 and 1 are TX and RX, manipulate with care.
 	DDRD = DDRD | B11110000;  // pins 7,6,5,4,x,x,x,x as OUTPUT - Left motor
-}  // _initCoilsPins()
+}  // _initCoilsPins_Luci()
 
 /**
  * Sets the stepper motor coils.
@@ -198,7 +209,7 @@ void Escornabot::_initCoilsPins()
  * @param stateL  coils on/off pattern to be applied to the left stepper motor.
  *                Only the lower nibble is used (4 coils -> 4 bits), the rest is ignored.
  */
-void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
+void Escornabot::_setCoils_Luci(uint8_t stateR, uint8_t stateL)
 {
 	// PORTB maps to Arduino digital pins 8 to 13 The two high bits (6 & 7) map to the crystal pins and are not usable
 	// RightMotor - pins 11,10,9,8 -> PORTB bits[3-0] = stateR bits[3-0]
@@ -211,7 +222,72 @@ void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
 	// (a & ~mask) | (b & mask)
 	// a -> PORTD  b->(stateL << 4)  mask->B11110000
 	PORTD = (PORTD & B00001111) | (stateL << 4); // implicit mask in second part
-}  // _setCoils()
+}  // _setCoils_Luci()
+
+//
+// Brivoi version
+//
+/**
+ * Initializes the output pins for the stepper motor coils.
+ */
+void Escornabot::_initCoilsPins_Brivoi()
+{
+	// BRIVOI: * D2-D5 Right stepper  * D6-D9 Left stepper
+	// PORTB maps to Arduino digital pins 8 to 13. The two high bits (6 & 7) map to the crystal pins and are not usable.
+	DDRB = DDRB | B00000011;  // pins x,x,x,x,x,x,9,8 as OUTPUT - Right stepper
+	// PORTD maps to Arduino digital pins 0 to 7. Pins 0 and 1 are TX and RX, manipulate with care.
+	DDRD = DDRD | B11111100;  // pins 7,6,5,4,3,2,x,x as OUTPUT - Right & Left steppers
+}  // _initCoilsPins_Brivoi()
+
+/**
+ * Sets the stepper motor coils.
+ *
+ * This function uses low level PORTx access to set all the coils at the same
+ * time and to be fast. That's also why the stepper motor pins are fixed now
+ * and not configurable anymore.
+ *
+ * @param stateR  coils on/off pattern to be applied to the right stepper motor.
+ *                Only the lower nibble is used (4 coils -> 4 bits), the rest is ignored.
+ * @param stateL  coils on/off pattern to be applied to the left stepper motor.
+ *                Only the lower nibble is used (4 coils -> 4 bits), the rest is ignored.
+ */
+void Escornabot::_setCoils_Brivoi(uint8_t stateR, uint8_t stateL)
+{
+	// BRIVOI: * D2-D5 Right Stepper  * D6-D9 Left Stepper
+	// PORTB maps to Arduino digital pins 8 to 13 The two high bits (6 & 7) map to the crystal pins and are not usable
+	// RightMotor - pins 9,8 -> PORTB bits[1-0] = stateL bits[3-2]
+	// (a & ~mask) | (b & mask)
+	// a -> PORTB  b->stateR  mask->B00000011
+	PORTB = (PORTB & B11111100) | ((stateL >> 2) & B00000011);
+
+	// PORTD maps to Arduino digital pins 0 to 7
+	// RightMotor - pins 7,6 LeftMotor - pins 5,4,3,2 -> PORTD bits[7-2] = stateR bits[3-0] | stateL bits[1-2]
+	// (a & ~mask) | (b & mask)
+	// a -> PORTD  b->(stateR << 2) | (stateL << 6)  mask->B11111100
+	PORTD = (PORTD & B00000011) | (((stateR << 2) & B00111100) | (stateL << 6));
+}  // _setCoils_Brivoi()
+
+/**
+ * Set the type of connection of the stepper motors.
+ *
+ * @param type it can be LUCI (default) or BRIVOI
+ *
+ * @note currently only two types are supported, Luci (default) and Brivoi (legacy).
+ */
+void Escornabot::_setSteppersWiring(EB_T_WIRINGTYPES type)
+{
+	switch (type)
+	{
+		case EB_TYPE_BRIVOI:
+			_initCoilsPins = &Escornabot::_initCoilsPins_Brivoi;
+			_setCoils = &Escornabot::_setCoils_Brivoi;
+			break;
+		case EB_TYPE_LUCI:
+		default: 
+			_initCoilsPins = &Escornabot::_initCoilsPins_Luci;
+			_setCoils = &Escornabot::_setCoils_Luci;
+	}
+}  // _setSteppersWiring()
 
 
 
@@ -224,14 +300,14 @@ void Escornabot::_setCoils(uint8_t stateR, uint8_t stateL)
 /**
  * Plays the specified BEEP for the indicated duration.
  *
- * @param beepid     Which beep to play
+ * @param beepId     Which beep to play
  * @param duration   Duration, in milliseconds, of the sound
  *
  * @note this function is non-blocking and returns inmediatly.
  */
-void Escornabot::beep(EB_T_BEEPS beepid, uint16_t duration)
+void Escornabot::beep(EB_T_BEEPS beepId, uint16_t duration)
 {
-	tone(BUZZER_PIN, EB_BEEP_FREQUENCIES[beepid], duration);
+	tone(_buzzer_pin, EB_BEEP_FREQUENCIES[beepId], duration);
 }  // beep()
 
 /**
@@ -243,7 +319,7 @@ void Escornabot::beep(EB_T_BEEPS beepid, uint16_t duration)
  */
 void Escornabot::playTone(uint16_t frequency, uint16_t duration, bool blocking)
 {
-	tone(BUZZER_PIN, frequency, duration);
+	tone(_buzzer_pin, frequency, duration);
 	if (blocking) delay(duration); // wait for it
 }  // playTone()
 
@@ -330,10 +406,10 @@ void Escornabot::playRTTTL(const char* tune)
 				case ',': case '\0':
 					if (note != -1 && octave >= 4 && octave <= 8) {
 						if (note > 0)
-							tone(BUZZER_PIN, EB_NOTES_FREQUENCIES[((octave - 4) * 12) + note - 1]);
+							tone(_buzzer_pin, EB_NOTES_FREQUENCIES[((octave - 4) * 12) + note - 1]);
 						delay(1000 * 60 / bpm / duration * 4); // BPM usually expresses the number of quarter notes per minute
 						// see https://github.com/ArminJo/PlayRtttl/blob/master/src/PlayRtttl.hpp#L192
-						noTone(BUZZER_PIN);
+						noTone(_buzzer_pin);
 					}
 
 					duration = default_duration;
@@ -519,39 +595,39 @@ void Escornabot::autoConfigKeypad()
 /**
  * Updates the keypad configuration values: analog input pin and
  * analog reading values for every key. If the key values are invalid
- * (0x00 or 0xFFFF), the default Config.h values are used.
+ * (0x0000 or 0xFFFF), the default Config.h values are used.
  *
- * @param KeypadPin  the analog pin to which the keypad is connected
- * @param Key_NN  analog value when no key is pressed
- * @param Key_FW  analog value for forward key
- * @param Key_TL  analog value for turn left key
- * @param Key_GO  analog value for go key
- * @param Key_TR  analog value for turn right key
- * @param Key_BW  analog value for forward key
+ * @param keypadPin  the analog pin to which the keypad is connected
+ * @param key_NN  analog value when no key is pressed
+ * @param key_FW  analog value for forward key
+ * @param key_TL  analog value for turn left key
+ * @param key_GO  analog value for go key
+ * @param key_TR  analog value for turn right key
+ * @param key_BW  analog value for forward key
  */
 void Escornabot::configKeypad(
-	uint8_t KeypadPin,
-	int16_t Key_NN,
-	int16_t Key_FW,
-	int16_t Key_TL,
-	int16_t Key_GO,
-	int16_t Key_TR,
-	int16_t Key_BW)
+	uint8_t keypadPin,
+	int16_t key_NN,
+	int16_t key_FW,
+	int16_t key_TL,
+	int16_t key_GO,
+	int16_t key_TR,
+	int16_t key_BW)
 {
-	_keypad_pin = KeypadPin;
+	_keypad_pin = keypadPin;
 	pinMode(_keypad_pin, INPUT_PULLUP); // 2-wires, works if it's externally pulled-up too
-	if (Key_NN == 0x00 || Key_NN == 0xFFFF) _keypad_values[0] = EB_KP_VALUE_NN;  // default Config.h
-	else _keypad_values[0] = Key_NN;
-	if (Key_FW == 0x00 || Key_FW == 0xFFFF) _keypad_values[1] = EB_KP_VALUE_FW;  // default Config.h
-	else _keypad_values[1] = Key_FW;
-	if (Key_TL == 0x00 || Key_TL == 0xFFFF) _keypad_values[2] = EB_KP_VALUE_TL;  // default Config.h
-	else _keypad_values[2] = Key_TL;
-	if (Key_GO == 0x00 || Key_GO == 0xFFFF) _keypad_values[3] = EB_KP_VALUE_GO;  // default Config.h
-	else _keypad_values[3] = Key_GO;
-	if (Key_TR == 0x00 || Key_TR == 0xFFFF) _keypad_values[4] = EB_KP_VALUE_TR;  // default Config.h
-	else _keypad_values[4] = Key_TR;
-	if (Key_BW == 0x00 || Key_BW == 0xFFFF) _keypad_values[5] = EB_KP_VALUE_BW;  // default Config.h
-	else _keypad_values[5] = Key_BW;
+	if (key_NN == 0x0000 || key_NN == 0xFFFF) _keypad_values[0] = EB_KP_VALUE_NN;  // default Config.h
+	else _keypad_values[0] = key_NN;
+	if (key_FW == 0x0000 || key_FW == 0xFFFF) _keypad_values[1] = EB_KP_VALUE_FW;  // default Config.h
+	else _keypad_values[1] = key_FW;
+	if (key_TL == 0x0000 || key_TL == 0xFFFF) _keypad_values[2] = EB_KP_VALUE_TL;  // default Config.h
+	else _keypad_values[2] = key_TL;
+	if (key_GO == 0x0000 || key_GO == 0xFFFF) _keypad_values[3] = EB_KP_VALUE_GO;  // default Config.h
+	else _keypad_values[3] = key_GO;
+	if (key_TR == 0x0000 || key_TR == 0xFFFF) _keypad_values[4] = EB_KP_VALUE_TR;  // default Config.h
+	else _keypad_values[4] = key_TR;
+	if (key_BW == 0x0000 || key_BW == 0xFFFF) _keypad_values[5] = EB_KP_VALUE_BW;  // default Config.h
+	else _keypad_values[5] = key_BW;
 }  // configKeypad()
 
 /**
@@ -890,7 +966,7 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 	case EB_CMD_FW : // move
 	case EB_CMD_BW :
 		// motors should turn in the same direction --> sequence inverted for each stepper
-		_setCoils(
+		(this->*_setCoils)(
 			EB_SM_DRIVING_SEQUENCE[EB_SM_DRIVING_SEQUENCE_MAX - _exec_drindex],
 			EB_SM_DRIVING_SEQUENCE[_exec_drindex]
 		);
@@ -901,7 +977,7 @@ uint8_t Escornabot::handleAction(uint32_t currentTime, EB_T_COMMANDS command)
 	case EB_CMD_TL_ALT :
 	case EB_CMD_TR_ALT :
 		// motors should turn in opposite direction --> sequence equal for both steppers
-		_setCoils(
+		(this->*_setCoils)(
 			EB_SM_DRIVING_SEQUENCE[_exec_drindex],
 			EB_SM_DRIVING_SEQUENCE[_exec_drindex]
 		);
@@ -960,17 +1036,17 @@ void Escornabot::handleStandby(uint32_t currentTime)
 		if (_powerbank_previousTime == 0) // start-up only
 		{
 			// energize one coil for 550 ms
-			_setCoils(B000, B0001);
+			(this->*_setCoils)(B0000, B0001);
 			delay(550);
-			_setCoils(B0000, B0000);
+			(this->*_setCoils)(B0000, B0000);
 			_powerbank_previousTime = currentTime;
 		}
 		if (currentTime - _powerbank_previousTime > _powerbank_timeout) // recurrent
 		{
 			// energize one coil for 5 ms
-			_setCoils(B0000, B0001);
+			(this->*_setCoils)(B0000, B0001);
 			delay(5);
-			_setCoils(B0000, B0000);
+			(this->*_setCoils)(B0000, B0000);
 			_powerbank_previousTime = currentTime;
 		}
 	}
@@ -989,14 +1065,14 @@ void Escornabot::handleStandby(uint32_t currentTime)
 /**
  * Set the different timeouts to handle the idle state of the Escornabot.
  *
- * @param powerbank  Max time before pulling some current from the powerbak to avoid its shutdown (ms).
+ * @param powerBank  Max time before pulling some current from the powerbak to avoid its shutdown (ms).
  *                   0 disables this timeout.
  * @param inactivity  Max time of user inactivity before sounding a "still-ON" alert.
  *                    0 disables this timeout.
  */
-void Escornabot::setStandbyTimeouts(uint32_t powerbank, uint32_t inactivity)
+void Escornabot::setStandbyTimeouts(uint32_t powerBank, uint32_t inactivity)
 {
-	_powerbank_timeout  = powerbank;
+	_powerbank_timeout  = powerBank;
 	_inactivity_timeout = inactivity;
 }  //setStandbyTimeouts()
 

@@ -4,8 +4,8 @@
  * This is a firmware for the Brivoi family of the Escornabot robot, more
  * functional, consistent and with less complexity & overengineering.
  *
- * Be careful, it uses the same connection schema than Luci and only changes
- * the following:
+ * Pay attention to the init function, which is called with configuration params.
+ * Also:
  *   1. Use of the on-board LED instead of the RGB-LED (Brivoi hasn't one!).
  *   2. Geometry is slightly different from the default (Luci).
  *
@@ -13,15 +13,16 @@
  *
  * @file      Firmware-Brivoi.ino
  * @author    mgesteiro einsua
- * @date      20250201
- * @version   1.0.0
+ * @date      20250420
+ * @version   1.2.3
  * @copyright OpenSource, LICENSE GPLv3
  */
 
-#define FIRMWARE_VERSION "1.2.2"
-// change this to false if your stepper motors work backwards.
-#define STEPPERMOTOR_FIXED_REVERSED true
-//#define DEBUG_MODE // uncomment this if you want to see debug information (via serial)
+#define FIRMWARE_VERSION "1.2.3"
+// change this to true if your stepper motors work backwards.
+#define STEPPERMOTOR_FIXED_REVERSED false
+// uncomment the following line if you want to see debug information (via serial)
+//#define DEBUG_MODE
 
 #include <Arduino.h>
 #include <Escornabot-lib.h>
@@ -62,7 +63,7 @@ uint32_t currentTime;
 void setup()
 {
 	// setup and start brivoi
-	brivoi.init();
+	brivoi.init(A4, 10, 12, EB_TYPE_BRIVOI); // Keypad, Buzzer, Neopixel, Wiring
 	// change geometry
 	#define WHEEL_DIAMETER   75.5f // mm
 	#define WHEEL_SEPARATION 75.5f // mm
@@ -74,22 +75,22 @@ void setup()
 	brivoi.setStepsPerMilimiter(STEPPERS_STEPS_MM);
 	brivoi.setStepsPerDegree(STEPPERS_STEPS_DEG);
 	// banner
-	Serial.print("Brivoi's FIRMWARE v");
-	Serial.println(FIRMWARE_VERSION);
+	Serial.print(F("Brivoi's FIRMWARE v"));
+	Serial.println(F(FIRMWARE_VERSION));
 	// show keypad values
 	int16_t* kv = brivoi.getKeypadValues();
-	Serial.println("\nKeypad current values:");
-	Serial.print("      NONE ");  Serial.println(kv[0]);
-	Serial.print("   FORWARD ");  Serial.println(kv[1]);
-	Serial.print(" TURN LEFT ");  Serial.println(kv[2]);
-	Serial.print("        GO ");  Serial.println(kv[3]);
-	Serial.print("TURN RIGHT ");  Serial.println(kv[4]);
-	Serial.print("  BACKWARD ");  Serial.println(kv[5]);
-	Serial.println("\nGeometry values:");
-	Serial.print("  Wheel diameter   = ");  Serial.println(WHEEL_DIAMETER);
-	Serial.print("  Wheel separation = ");  Serial.println(WHEEL_SEPARATION);
-	Serial.print("  Steps/mm = ");  Serial.println(STEPPERS_STEPS_MM);
-	Serial.print("  Steps/°  = ");  Serial.println(STEPPERS_STEPS_DEG);
+	Serial.println(F("\nKeypad current values:"));
+	Serial.print(F("      NONE "));  Serial.println(kv[0]);
+	Serial.print(F("   FORWARD "));  Serial.println(kv[1]);
+	Serial.print(F(" TURN LEFT "));  Serial.println(kv[2]);
+	Serial.print(F("        GO "));  Serial.println(kv[3]);
+	Serial.print(F("TURN RIGHT "));  Serial.println(kv[4]);
+	Serial.print(F("  BACKWARD "));  Serial.println(kv[5]);
+	Serial.println(F("\nGeometry values:"));
+	Serial.print(F("  Wheel diameter   = "));  Serial.println(WHEEL_DIAMETER);
+	Serial.print(F("  Wheel separation = "));  Serial.println(WHEEL_SEPARATION);
+	Serial.print(F("  Steps/mm = "));  Serial.println(STEPPERS_STEPS_MM);
+	Serial.print(F("  Steps/°  = "));  Serial.println(STEPPERS_STEPS_DEG);
 	Serial.flush();
 	// do initial show
 	startUpShow();
@@ -144,8 +145,8 @@ void loop()
  */
 void startUpShow()
 {
-	// start-up sequence: flash 5 times + tune
-	// brivoi.blinkLED(3);
+	// start-up sequence: flash 3 times + tune
+	brivoi.blinkLED(3);
 	brivoi.playRTTTL(RTTTL_STARTUP);
 }  // startUpShow()
 
@@ -186,7 +187,7 @@ void addCommand(EB_T_COMMANDS command)
 	program_count ++;
 
 	#ifdef DEBUG_MODE
-	Serial.print("ADDED ");
+	Serial.print(F("ADDED "));
 	Serial.println(EB_CMD_LABELS[command]);
 	#endif
 }  // addCommand()
@@ -207,11 +208,11 @@ void stop(uint32_t currentTime)
 		is_diagonal = false;  // reset diagonal status
 	program_index = 0;  // reset execution pointer
 	if (! is_diagonal) brivoi.turnLED(OFF); // input status
-	else brivoi.blinkLED(5, true); // diagonal!
+	else brivoi.blinkLED(3, true); // diagonal!
 	status = PROGRAMMING; // back to user input
 
 	#ifdef DEBUG_MODE
-	Serial.println("STOP!");
+	Serial.println(F("STOP!"));
 	#endif
 
 	delay(500); // allow some time for sound and key stroke clearance
@@ -246,14 +247,15 @@ void processKeyStroke(uint8_t kp_code)
 			addCommand(EB_CMD_TL);
 			break;
 		case EB_KP_KEY_GO:
-			if (program_count < 1) break;
-
 			brivoi.turnLED(ON);
 			brivoi.beep(EB_BEEP_DEFAULT, BEEP_DURATION_SHORT);
+
+			if (program_count < 1) break;
+
 			status = EXECUTING;
 
 			#ifdef DEBUG_MODE
-			Serial.println("GO!");
+			Serial.println(F("GO!"));
 			#endif
 
 			break;
@@ -274,7 +276,7 @@ void processKeyStroke(uint8_t kp_code)
 		// go back to "input color" after a moment
 		delay(BEEP_DURATION_SHORT + 50);
 		if (! is_diagonal) brivoi.turnLED(OFF); // input status
-		else brivoi.blinkLED(5, true); // diagonal!
+		else brivoi.blinkLED(3, true); // diagonal!
 	}
 	// LONG key presses
 	else if (event == EB_KP_EVT_LONGPRESSED)
@@ -282,21 +284,10 @@ void processKeyStroke(uint8_t kp_code)
 		switch (key)
 		{
 		case EB_KP_KEY_FW:
-			// RESET action
-			// check if there is something to reset
-			if
-			(
-				(program_count < 1) // no program
-				&& (! is_diagonal)  // no diagonal angle
-			) break; // nothing to do here
-			// program reset!!
+			// PAUSE action
 			brivoi.turnLED(ON);
 			brivoi.beep(EB_BEEP_FORWARD, BEEP_DURATION_LONG);
-			delay(BEEP_DURATION_LONG + 100);
-			brivoi.playRTTTL(RTTTL_PRESET);
-			program_count = 0;   // reset program
-			program_index = 0;   // reset execution pointer
-			is_diagonal = false; // reset diagonal status
+			addCommand(EB_CMD_PA);
 			break;
 		case EB_KP_KEY_TL:
 			brivoi.turnLED(ON);
@@ -306,7 +297,7 @@ void processKeyStroke(uint8_t kp_code)
 		case EB_KP_KEY_GO:
 			brivoi.turnLED(ON);
 			brivoi.beep(EB_BEEP_DEFAULT, BEEP_DURATION_LONG);
-			delay(BEEP_DURATION_LONG + 100);
+			delay(BEEP_DURATION_LONG * 5);
 			brivoi.playRTTTL(RTTTL_MODECHG);
 			if (mode == STANDARD) mode = DONTRESET;
 			else mode = STANDARD;
@@ -323,9 +314,23 @@ void processKeyStroke(uint8_t kp_code)
 			addCommand(EB_CMD_TR_ALT);
 			break;
 		case EB_KP_KEY_BW:
+			// RESET action
 			brivoi.turnLED(ON);
 			brivoi.beep(EB_BEEP_BACKWARD, BEEP_DURATION_LONG);
-			addCommand(EB_CMD_PA);
+			// check if there is something to reset
+			if
+			(
+				(program_count < 1) // no program
+				&& (! is_diagonal)  // no diagonal angle
+			) break; // nothing to do here
+			// program reset!!
+			delay(BEEP_DURATION_LONG + 50); // necessary to show key color = input feedback
+			brivoi.turnLED(OFF);  // RESET = Off
+			delay(BEEP_DURATION_LONG * 5);
+			brivoi.playRTTTL(RTTTL_PRESET);
+			program_count = 0;   // reset program
+			program_index = 0;   // reset execution pointer
+			is_diagonal = false; // reset diagonal status
 			break;
 		default:
 			return; // unhandled case, avoid any further action
@@ -333,7 +338,7 @@ void processKeyStroke(uint8_t kp_code)
 		// go back to "input color" after a moment
 		delay(BEEP_DURATION_LONG + 50);
 		if (! is_diagonal) brivoi.turnLED(OFF); // input status
-		else brivoi.blinkLED(5, true); // diagonal!
+		else brivoi.blinkLED(3, true); // diagonal!
 	}
 }  // processKeyStroke()
 
@@ -420,11 +425,11 @@ void processProgram()
 			brivoi.disableStepperMotors();
 			brivoi.playRTTTL(RTTTL_FINISH);
 			if (! is_diagonal) brivoi.turnLED(OFF); // input status
-			else brivoi.blinkLED(5, true); // diagonal!
+			else brivoi.blinkLED(3, true); // diagonal!
 			status = PROGRAMMING; // back to user input
 
 			#ifdef DEBUG_MODE
-			Serial.println("FINISHED");
+			Serial.println(F("FINISHED"));
 			#endif
 		}
 	} // switch

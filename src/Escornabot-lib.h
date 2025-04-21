@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro einsua
- * @date      20250201
- * @version   1.3.0
+ * @date      20250418
+ * @version   1.4.0
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "1.3.0"
+#define EB_VERSION "1.4.0"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -28,8 +28,14 @@
 //
 // STEPPER MOTORS                    //
 //
-const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0011, B0110, B1100, B1001};  // full drive - stronger
-// const uint8_t EB_SM_DRIVING_SEQUENCE[] = {B0001, B0010, B0100, B1000};  // wave drive - less consumption
+/**
+ * Definition of all the supported wiring schemes for the stepper motors.
+ */
+typedef enum: uint8_t
+{
+	EB_TYPE_LUCI   = 0,
+	EB_TYPE_BRIVOI = 1
+} EB_T_WIRINGTYPES;
 #define EB_SM_DRIVING_SEQUENCE_MAX sizeof(EB_SM_DRIVING_SEQUENCE) - 1
 
 
@@ -73,12 +79,12 @@ const uint16_t EB_BEEP_FREQUENCIES[] =
  */
 typedef enum: uint8_t
 {
-	EB_KP_KEY_NN = 0,
-	EB_KP_KEY_FW = 1,
-	EB_KP_KEY_TL = 2,
-	EB_KP_KEY_GO = 3,
-	EB_KP_KEY_TR = 4,
-	EB_KP_KEY_BW = 5
+	EB_KP_KEY_NN = 0,  // none
+	EB_KP_KEY_FW = 1,  // forward - blue
+	EB_KP_KEY_TL = 2,  // turn left - red
+	EB_KP_KEY_GO = 3,  // go - white
+	EB_KP_KEY_TR = 4,  // turn right - green
+	EB_KP_KEY_BW = 5   // backward - yellow
 } EB_T_KP_KEYS;
 #define EB_T_KP_KEYS_SIZE 6
 const String EB_KP_KEYS_LABELS[] =
@@ -112,7 +118,7 @@ typedef enum: uint8_t
 #define SAVED    1
 
 // auto keypad configuration
-#define EB_KP_PULLUP_MARGIN 140
+#define EB_KP_PULLUP_MARGIN 50
 // Index to the last 5 uint16_t EEPROM positions;
 // E2END = The last EEPROM address (bytes). 1023 for Arduino Nano 328
 #define EB_KP_EEPROM_VALUES_INDEX (uint16_t *)(E2END - 2 * 5 + 1)
@@ -127,14 +133,14 @@ typedef enum: uint8_t
  */
 typedef enum: uint8_t
 {
-	EB_CMD_NN     = 0,
-	EB_CMD_FW     = 1,
-	EB_CMD_TL     = 2,
-	EB_CMD_TR     = 3,
-	EB_CMD_BW     = 4,
-	EB_CMD_PA     = 5,
-	EB_CMD_TL_ALT = 6,
-	EB_CMD_TR_ALT = 7
+	EB_CMD_NN     = 0,  // none
+	EB_CMD_FW     = 1,  // move forward
+	EB_CMD_TL     = 2,  // turn left
+	EB_CMD_TR     = 3,  // turn right
+	EB_CMD_BW     = 4,  // move backward
+	EB_CMD_PA     = 5,  // pause
+	EB_CMD_TL_ALT = 6,  // turn left alternative
+	EB_CMD_TR_ALT = 7   // turn right alternative
 } EB_T_COMMANDS;
 const String EB_CMD_LABELS[] =
 {
@@ -157,12 +163,18 @@ const String EB_CMD_LABELS[] =
 /**
  * Main class with the core functions and data to program an Escornabot ROBOT.
  */
-class Escornabot {
+class Escornabot
+{
 public:
 	// constructor and destructor
 	Escornabot();
 	virtual ~Escornabot();
-	void init();
+	void init(
+		uint8_t keypadPin   = KEYPAD_PIN,    // config.h default
+		uint8_t buzzerPin   = BUZZER_PIN,    // config.h default
+		uint8_t neopixelPin = NEOPIXEL_PIN,  // config.h default
+		EB_T_WIRINGTYPES wiringType = EB_TYPE_LUCI  // Luci default
+	);
 
 	// Stepper motors
 	void move(float cms);
@@ -172,7 +184,7 @@ public:
 	void setStepsPerDegree(float steps);
 
 	// Buzzer
-	void beep(EB_T_BEEPS beepid, uint16_t duration);
+	void beep(EB_T_BEEPS beepId, uint16_t duration);
 	void playTone(uint16_t frequency, uint16_t duration, bool blocking);
 	void playRTTTL(const char* tune);
 
@@ -187,13 +199,13 @@ public:
 	// Keypad
 	void autoConfigKeypad();
 	void configKeypad(
-		uint8_t KeypadPin,
-		int16_t KeypadValue_NN,
-		int16_t KeypadValue_FW,
-		int16_t KeypadValue_TL,
-		int16_t KeypadValue_GO,
-		int16_t KeypadValue_TR,
-		int16_t KeypadValue_BW);
+		uint8_t keypadPin,
+		int16_t keypadValue_NN,
+		int16_t keypadValue_FW,
+		int16_t keypadValue_TL,
+		int16_t keypadValue_GO,
+		int16_t keypadValue_TR,
+		int16_t keypadValue_BW);
 	EB_T_KP_KEYS getPressedKey();
 	uint8_t handleKeypad(uint32_t currentTime);
 	void clearKeypad(uint32_t currentTime);
@@ -211,7 +223,7 @@ public:
 
 	// Stand-by
 	void handleStandby(uint32_t currentTime);
-	void setStandbyTimeouts(uint32_t powerbank, uint32_t inactivity);
+	void setStandbyTimeouts(uint32_t powerBank, uint32_t inactivity);
 
 	// Extra
 	void fixReversed();
@@ -219,10 +231,22 @@ public:
 
 private:
 	// Stepper motors
-	void _initCoilsPins();
-	void _setCoils(uint8_t stateR, uint8_t stateL);
+	void _initCoilsPins_Luci();
+	void _initCoilsPins_Brivoi();
+	void _setCoils_Luci(uint8_t stateR, uint8_t stateL);
+	void _setCoils_Brivoi(uint8_t stateR, uint8_t stateL);
+	void _setSteppersWiring(EB_T_WIRINGTYPES type);
+
+	// pointer functions for base actions with the coils
+	// configured during init() with the _setSteppersWiring() method
+	void (Escornabot::*_initCoilsPins)();
+	void (Escornabot::*_setCoils)(uint8_t stateR, uint8_t stateL);
+
 	float _steppers_steps_mm = STEPPERS_STEPS_MM;   // default from Config.h
 	float _steppers_steps_deg = STEPPERS_STEPS_DEG; // default from Config.h
+
+	// Buzzer
+	uint8_t _buzzer_pin; // pin in use
 
 	// Neopixel
 	NeoPixel *_neopixel;
@@ -239,7 +263,7 @@ private:
 	// Command execution
 	uint32_t _exec_steps;   // # steps for the current action
 	uint32_t _exec_wait;    // delay between steps, microseconds
-	uint32_t _exec_ap;      // acceleration point: #steps up to accelerate
+	uint32_t _exec_ap;      // acceleration point: #steps until stop accelerating
 	uint32_t _exec_dp;      // deceleration point: #steps to start deceleration
 	uint8_t  _exec_drinit;  // initial driving sequence index
 	int8_t   _exec_drinc;   // driving sequence index growth sign
