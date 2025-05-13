@@ -7,8 +7,8 @@
  *
  * @file      Config.h
  * @author    mgesteiro einsua
- * @date      20250418
- * @version   1.4.0
+ * @date      20250513
+ * @version   1.4.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 

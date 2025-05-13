@@ -7,15 +7,15 @@
  *
  * @file      Escornabot-lib.h
  * @author    mgesteiro einsua
- * @date      20250418
- * @version   1.4.0
+ * @date      20250513
+ * @version   1.4.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
 #ifndef ESCORNABOT_LIB_H
 #define ESCORNABOT_LIB_H
 
-#define EB_VERSION "1.4.0"
+#define EB_VERSION "1.4.1"
 
 #include <Arduino.h>
 #include <stdint.h>
@@ -197,7 +197,7 @@ public:
 	void showKeyColor(EB_T_KP_KEYS key);
 
 	// Keypad
-	void autoConfigKeypad();
+	void autoConfigKeypad(uint8_t keypadPin);
 	void configKeypad(
 		uint8_t keypadPin,
 		int16_t keypadValue_NN,

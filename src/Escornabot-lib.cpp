@@ -7,8 +7,8 @@
  *
  * @file      Escornabot-lib.cpp
  * @author    mgesteiro einsua
- * @date      20250418
- * @version   1.4.0
+ * @date      20250513
+ * @version   1.4.1
  * @copyright OpenSource, LICENSE GPLv3
  */
 
@@ -73,7 +73,7 @@ void Escornabot::init(
 	Serial.print("Escornabot-lib v");
 	Serial.println(EB_VERSION);
 	// Keypad autoconfig: give it a chance
-	autoConfigKeypad();
+	autoConfigKeypad(keypadPin);
 	// Read keypad values from EEPROM (may be invalid)
 	uint16_t *eeprom_index = EB_KP_EEPROM_VALUES_INDEX;
 	int16_t eeprom_values[5];
@@ -535,13 +535,15 @@ void Escornabot::_initNeoPixel(int pin)
  * 3. waits for the user to press all the keys in the following order:
  *    FW, TL, GO, TR, BW (from top to bottom, from left to right)
  * 3. updates all five key values in the EEPROM (if different)
+ * 
+ * @param keypadPin  the analog pin to which the keypad is connected
  */
-void Escornabot::autoConfigKeypad()
+void Escornabot::autoConfigKeypad(uint8_t keypadPin)
 {
 	// detect key pressed to start
-	pinMode(KEYPAD_PIN, INPUT_PULLUP); // if not "pullupable" works as normal INPUT
+	pinMode(keypadPin, INPUT_PULLUP); // if not "pullupable" works as normal INPUT
 	bool press_detected = false;
-	uint16_t port_read_value = analogRead(KEYPAD_PIN);
+	uint16_t port_read_value = analogRead(keypadPin);
 	if (
 		(port_read_value > EB_KP_PULLUP_MARGIN)
 		&& (port_read_value < (1023 - EB_KP_PULLUP_MARGIN))
@@ -558,22 +560,22 @@ void Escornabot::autoConfigKeypad()
 	if (!press_detected) return; // exit
 
 	// wait until no key is pressed anymore
-	port_read_value = analogRead(KEYPAD_PIN);
+	port_read_value = analogRead(keypadPin);
 	while (
 			(port_read_value > EB_KP_PULLUP_MARGIN)
 			&& (port_read_value < 1023 - EB_KP_PULLUP_MARGIN)
-		) port_read_value = analogRead(KEYPAD_PIN); // wait for the release
+		) port_read_value = analogRead(keypadPin); // wait for the release
 
 	// read and save keys' values
 	uint16_t keypad_values[5];
 	for (byte i=0; i < 5; i++)
 	{
 		// read value
-		port_read_value = analogRead(KEYPAD_PIN);
+		port_read_value = analogRead(keypadPin);
 		while (
 			(port_read_value < EB_KP_PULLUP_MARGIN)
 			|| (port_read_value > 1023 - EB_KP_PULLUP_MARGIN)
-		) port_read_value = analogRead(KEYPAD_PIN); // wait for a key press
+		) port_read_value = analogRead(keypadPin); // wait for a key press
 
 		// store value for each key
 		keypad_values[i] = port_read_value;
